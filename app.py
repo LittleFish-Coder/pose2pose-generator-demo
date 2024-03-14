@@ -1,6 +1,5 @@
 import streamlit as st
 from PIL import Image
-import cv2
 
 # 初始化變數
 image_file = None
