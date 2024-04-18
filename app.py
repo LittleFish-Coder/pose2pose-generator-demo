@@ -28,7 +28,7 @@
 #         st.warning("請先上傳一個影片文件。")
 import streamlit as st
 from PIL import Image
-import cv2
+# import cv2
 import tempfile
 
 def process_pose_video(input_video_path):
