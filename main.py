@@ -12,7 +12,7 @@ def GAN_model(video):
     return video
 
 def main():
-    st.title("姿勢估計")
+    st.title("YYDS影片生成器")
 
     # 輸入影片
     uploaded_file = st.file_uploader("選擇一個影片檔", type=['mp4', 'avi', 'mov'])
