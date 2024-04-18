@@ -22,22 +22,18 @@ def main():
             video = cv2.VideoCapture(tmp_file.name)
             st.video(uploaded_file)
 
-    cols = st.columns(2)
-    cols2 = st.columns(2)
+    pose_estimation_button = st.button("pose_estimation", key="pose_estimation")
+    if pose_estimation_button and uploaded_file is not None:
+        st.session_state.processed_video1 = pose_estimation(uploaded_file)
+    if 'processed_video1' in st.session_state:
+        st.video(st.session_state.processed_video1)
 
-    with cols[0]:
-        pose_estimation_button = st.button("pose_estimation", key="pose_estimation")
-        if pose_estimation_button and uploaded_file is not None:
-            st.session_state.processed_video1 = pose_estimation(uploaded_file)
-        if 'processed_video1' in st.session_state:
-            st.video(st.session_state.processed_video1)
-
-    with cols2[0]:
-        generate_button = st.button("generate", key="generate")
-        if generate_button and uploaded_file is not None:
-            st.session_state.processed_video2 = GAN_model(uploaded_file)
-        if 'processed_video2' in st.session_state:
-             st.video(st.session_state.processed_video2)
+   
+    generate_button = st.button("generate", key="generate")
+    if generate_button and uploaded_file is not None:
+        st.session_state.processed_video2 = GAN_model(uploaded_file)
+    if 'processed_video2' in st.session_state:
+            st.video(st.session_state.processed_video2)
 
 if __name__ == "__main__":
     main()
