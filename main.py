@@ -91,8 +91,6 @@ def main():
 
         # 寫入影格並編碼成影片
         for image_path in image_paths:
-            # show image
-            st.image(image_path)
             frame = cv2.imread(image_path)
             out.write(frame)
 
