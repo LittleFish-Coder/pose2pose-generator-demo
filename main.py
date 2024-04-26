@@ -71,8 +71,8 @@ def main():
                 cv2.imwrite(image_path, black_background)
                 print(f"成功保存圖片: {image_path}")
                 # 每當 frame_number 可被 10 整除時，顯示該幀的圖片
-                if frame_number % 10 == 0:
-                    st.image(black_background, caption=f"Frame {frame_number}", use_column_width=True)
+                # if frame_number % 10 == 0:
+                #     st.image(black_background, caption=f"Frame {frame_number}", use_column_width=True)
                 frame_number += 1
                 progress = frame_number / total_frames
                 progress_bar.progress(progress)
@@ -81,7 +81,7 @@ def main():
             progress = total_frames / total_frames
             progress_bar.progress(progress)
             print("pose_estimation完成")
-            video_placeholder = st.empty()
+            # video_placeholder = st.empty()
             # 檢查 frame_number 是否大於 0
             if frame_number > 0:
                 # image_paths = natsorted(image_paths)
@@ -104,8 +104,10 @@ def main():
                 # 釋放影片編碼器
                 out.release()
                 print("影片生成完成")
-
-                video_placeholder.video(os.path.join(tmp_dir, 'output_video.mp4'))
+                video_file = open(os.path.join(tmp_dir, 'output_video.mp4'), 'rb')
+                video_bytes = video_file.read()
+                st.video(video_bytes)
+                # video_placeholder.video(os.path.join(tmp_dir, 'output_video.mp4'))
             else:
                 st.warning("未能讀取視頻幀")
 
