@@ -14,8 +14,8 @@ def pose_estimation(uploaded_file):
     # video_path = 'clip.mp4'
     # output_images_dir = 'outputImages'
     # output_video_dir = 'outputVideo'
-    # os.makedirs(output_images_dir, exist_ok=True)
-    # os.makedirs(output_video_dir, exist_ok=True)
+        # os.makedirs(output_images_dir, exist_ok=True)
+        # os.makedirs(output_video_dir, exist_ok=True)
     # Initialize MediaPipe Pose and Drawing utilities
         mp_pose = mp.solutions.pose
         mp_drawing = mp.solutions.drawing_utils
@@ -80,8 +80,9 @@ def pose_estimation(uploaded_file):
         out.release()
         with open('output.mp4', 'rb') as f:
             video_bytes = f.read()
-        st.video(video_bytes)
-    # return video
+        # st.video(video_bytes)
+    os.remove('output.mp4')
+    return video_bytes
 
 def GAN_model(video):
     # 將pose estimation後的圖片做GAN model
@@ -99,7 +100,8 @@ def main():
 
     pose_estimation_button = st.button("pose_estimation", key="pose_estimation")
     if pose_estimation_button and uploaded_file is not None:
-        pose_estimation(uploaded_file)
+        processed_video = pose_estimation(uploaded_file)
+        st.video(processed_video)
     #     st.session_state.processed_video1 = pose_estimation(uploaded_file)
     # if 'processed_video1' in st.session_state:
     #     st.video(st.session_state.processed_video1)
