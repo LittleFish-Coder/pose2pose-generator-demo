@@ -1,4 +1,3 @@
 mediapipe
 natsort
 pymongo
-pymongo.mongo_client
