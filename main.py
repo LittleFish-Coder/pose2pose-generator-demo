@@ -100,9 +100,9 @@ def main():
                 #     frame = cv2.imread(image_path)
                 #     out.write(frame)
                 for image_path in image_paths:
-                    frame = cv2.imread(os.path.join(image_paths, image_path))
+                    frame = cv2.imread(image_path)
                     out.write(frame)
-                    print(f"寫入影格: {os.path.join(image_paths, image_path)}")  # 打印寫入的影格路徑
+                    print(f"寫入影格: {image_path}")  # 打印寫入的影格路徑
                 # 釋放影片編碼器
                 out.release()
                 print("影片生成完成")
