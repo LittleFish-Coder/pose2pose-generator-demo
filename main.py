@@ -9,6 +9,18 @@ import tempfile
 def GAN_model(video):
     # 將pose estimation後的圖片做GAN model
     return video
+temp_file_to_save = './temp_file_1.mp4'
+temp_file_result  = './temp_file_2.mp4'
+temp_dir_images = './temp_images'
+def write_bytesio_to_file(filename, bytesio):
+    """
+    Write the contents of the given BytesIO to a file.
+    Creates the file or overwrites the file if it does
+    not exist yet. 
+    """
+    with open(filename, "wb") as outfile:
+        # Copy the BytesIO stream to the output file
+        outfile.write(bytesio.getbuffer())
 
 def main():
     st.title("YYDS影片生成器")
@@ -22,94 +34,158 @@ def main():
 
     pose_estimation_button = st.button("pose_estimation", key="pose_estimation")
     if pose_estimation_button and uploaded_file is not None:
-        with tempfile.TemporaryDirectory() as tmp_dir:
-            with tempfile.NamedTemporaryFile(delete=False, suffix=".mp4") as tmp_file:
-                tmp_file.write(uploaded_file.getvalue())
-                tmp_file_path = tmp_file.name
+        write_bytesio_to_file(temp_file_to_save, uploaded_file)
+        # output_images_dir = 'outputImages'
+        # output_video_dir = 'outputVideo'
+        # os.makedirs(output_images_dir, exist_ok=True)
+        # os.makedirs(output_video_dir, exist_ok=True)
+        # Initialize MediaPipe Pose and Drawing utilities
+        mp_pose = mp.solutions.pose
+        mp_drawing = mp.solutions.drawing_utils
+        pose = mp_pose.Pose()
 
-            # Initialize MediaPipe Pose and Drawing utilities
-            mp_pose = mp.solutions.pose
-            mp_drawing = mp.solutions.drawing_utils
-            pose = mp_pose.Pose()
-
-            # Open the video file
-            cap = cv2.VideoCapture(tmp_file_path)
-            total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
-            progress_bar = st.progress(0)  # 初始化進度條
-
-            # Initialize an empty frame and black background image
-            ret, frame = cap.read()
-            if ret:
-                frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-                black_background = np.zeros_like(frame_rgb)
-            else:
-                print("Failed to read the first frame from the video file.")
-                cap.release()
-                exit()
-
-            frame_number = 0
-
-            while cap.isOpened():
-                ret, frame = cap.read()
-                if not ret:
-                    break
-
-                # Convert the frame to RGB
-                frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-
-                # Create a black background image
-                black_background = np.zeros_like(frame_rgb)
-
-                # Process the frame with MediaPipe Pose
-                result = pose.process(frame_rgb)
-
-                # Draw the pose landmarks on the black background
-                if result.pose_landmarks:
-                    mp_drawing.draw_landmarks(black_background, result.pose_landmarks, mp_pose.POSE_CONNECTIONS)
-
-                image_path = os.path.join(tmp_dir, f'frame_{frame_number}.png')
-                cv2.imwrite(image_path, black_background)
-                print(f"成功保存圖片: {image_path}")
-                # 每當 frame_number 可被 10 整除時，顯示該幀的圖片
-                # if frame_number % 10 == 0:
-                #     st.image(black_background, caption=f"Frame {frame_number}", use_column_width=True)
-                frame_number += 1
-                progress = frame_number / total_frames
-                progress_bar.progress(progress)
-
+        # Open the video file
+        cap = cv2.VideoCapture(temp_file_to_save)
+        # Initialize an empty frame and black background image
+        ret, frame = cap.read()
+        if ret:
+            frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+            black_background = np.zeros_like(frame_rgb)
+        else:
+            print("Failed to read the first frame from the video file.")
             cap.release()
-            progress = total_frames / total_frames
-            progress_bar.progress(progress)
-            print("pose_estimation完成")
-            # video_placeholder = st.empty()
-            # 檢查 frame_number 是否大於 0
-            if frame_number > 0:
-                # image_paths = natsorted(image_paths)
-                image_paths = natsorted(os.path.join(tmp_dir, f'frame_{frame_num}.png') for frame_num in range(frame_number))
+            exit()
+        frame_number = 0
+
+        while cap.isOpened():
+            ret, frame = cap.read()
+            if not ret:
+                break
+
+            # Convert the frame to RGB
+            frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+
+            # Create a black background image
+            black_background = np.zeros_like(frame_rgb)
+
+            # Process the frame with MediaPipe Pose
+            result = pose.process(frame_rgb)
+
+            # Draw the pose landmarks on the black background
+            if result.pose_landmarks:
+                mp_drawing.draw_landmarks(black_background, result.pose_landmarks, mp_pose.POSE_CONNECTIONS)
+
+            image_path = os.path.join(temp_dir_images, f'frame_{frame_number}.png')
+            cv2.imwrite(image_path, black_background)
+
+            frame_number += 1
+        
+        # 取得所有輸出影像路徑並自然排序
+        image_paths = natsorted(os.path.join(temp_dir_images, f'frame_{frame_num}.png') for frame_num in range(frame_number))
+
+        # 建立影片編碼器
+        fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+        fps = cap.get(cv2.CAP_PROP_FPS)
+        frame_size = (black_background.shape[1], black_background.shape[0])  # 影格大小
+        out = cv2.VideoWriter(temp_file_result, fourcc, fps, frame_size)
+
+        # 寫入影格並編碼成影片
+        for image_path in image_paths:
+            # show image
+            st.image(image_path)
+            frame = cv2.imread(image_path)
+            out.write(frame)
+
+        # 釋放影片編碼器
+        out.release()
+        cap.release()
+        st.video(temp_file_result)
+        # with tempfile.TemporaryDirectory() as tmp_dir:
+        #     with tempfile.NamedTemporaryFile(delete=False, suffix=".mp4") as tmp_file:
+        #         tmp_file.write(uploaded_file.getvalue())
+        #         tmp_file_path = tmp_file.name
+
+        #     # Initialize MediaPipe Pose and Drawing utilities
+        #     mp_pose = mp.solutions.pose
+        #     mp_drawing = mp.solutions.drawing_utils
+        #     pose = mp_pose.Pose()
+
+        #     # Open the video file
+        #     cap = cv2.VideoCapture(tmp_file_path)
+        #     total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+        #     progress_bar = st.progress(0)  # 初始化進度條
+
+        #     # Initialize an empty frame and black background image
+        #     ret, frame = cap.read()
+        #     if ret:
+        #         frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+        #         black_background = np.zeros_like(frame_rgb)
+        #     else:
+        #         print("Failed to read the first frame from the video file.")
+        #         cap.release()
+        #         exit()
+
+        #     frame_number = 0
+
+        #     while cap.isOpened():
+        #         ret, frame = cap.read()
+        #         if not ret:
+        #             break
+
+        #         # Convert the frame to RGB
+        #         frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+
+        #         # Create a black background image
+        #         black_background = np.zeros_like(frame_rgb)
+
+        #         # Process the frame with MediaPipe Pose
+        #         result = pose.process(frame_rgb)
+
+        #         # Draw the pose landmarks on the black background
+        #         if result.pose_landmarks:
+        #             mp_drawing.draw_landmarks(black_background, result.pose_landmarks, mp_pose.POSE_CONNECTIONS)
+
+        #         image_path = os.path.join(tmp_dir, f'frame_{frame_number}.png')
+        #         cv2.imwrite(image_path, black_background)
+        #         print(f"成功保存圖片: {image_path}")
+        #         # 每當 frame_number 可被 10 整除時，顯示該幀的圖片
+        #         # if frame_number % 10 == 0:
+        #         #     st.image(black_background, caption=f"Frame {frame_number}", use_column_width=True)
+        #         frame_number += 1
+        #         progress = frame_number / total_frames
+        #         progress_bar.progress(progress)
+
+        #     cap.release()
+        #     progress = total_frames / total_frames
+        #     progress_bar.progress(progress)
+        #     print("pose_estimation完成")
+        #     # video_placeholder = st.empty()
+        #     # 檢查 frame_number 是否大於 0
+        #     if frame_number > 0:
+        #         # image_paths = natsorted(image_paths)
+        #         image_paths = natsorted(os.path.join(tmp_dir, f'frame_{frame_num}.png') for frame_num in range(frame_number))
                 
-                # 建立影片編碼器
-                fourcc = cv2.VideoWriter_fourcc(*'mp4v')
-                fps = 30.0
-                frame_size = (black_background.shape[1], black_background.shape[0])
-                print(f"影片路徑: {os.path.join(tmp_dir, 'output_video.mp4')}")
-                # processed_video_path = os.path.join(tmp_dir, 'output_video.mp4')
-                # out = cv2.VideoWriter(processed_video_path, fourcc, fps, frame_size)
-                out = cv2.VideoWriter(os.path.join(tmp_dir, 'output_video.mp4'), fourcc, fps, frame_size)
+        #         # 建立影片編碼器
+        #         fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+        #         fps = 30.0
+        #         frame_size = (black_background.shape[1], black_background.shape[0])
+        #         print(f"影片路徑: {os.path.join(tmp_dir, 'output_video.mp4')}")
+        #         out = cv2.VideoWriter(os.path.join(tmp_dir, 'output_video.mp4'), fourcc, fps, frame_size)
 
-                # 寫入影格並編碼成影片
-                for image_path in image_paths:
-                    frame = cv2.imread(image_path)
-                    out.write(frame)
+        #         # 寫入影格並編碼成影片
+        #         for image_path in image_paths:
+        #             frame = cv2.imread(image_path)
+        #             out.write(frame)
 
-                # 釋放影片編碼器
-                out.release()
-                print("影片生成完成")
-                video_file = open(os.path.join(tmp_dir, 'output_video.mp4'), 'rb')
-                video_bytes = video_file.read()
-                st.video(video_bytes)
-                # video_placeholder.video(os.path.join(tmp_dir, 'output_video.mp4'))
-            else:
-                st.warning("未能讀取視頻幀")
+        #         # 釋放影片編碼器
+        #         out.release()
+        #         print("影片生成完成")
+        #         video_file = open(os.path.join(tmp_dir, 'output_video.mp4'), 'rb')
+        #         video_bytes = video_file.read()
+        #         st.video(video_bytes)
+        #         # video_placeholder.video(os.path.join(tmp_dir, 'output_video.mp4'))
+        #     else:
+        #         st.warning("未能讀取視頻幀")
 
 
    
