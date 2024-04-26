@@ -104,7 +104,7 @@ def main():
                     out.write(frame)
                     print(f"寫入影格: {image_path}")  # 打印寫入的影格路徑
                 # 釋放影片編碼器
-                out.release()
+                
                 print("影片生成完成")
                 video_file = open(os.path.join(tmp_dir, 'output_video.mp4'), 'rb')
                 video_bytes = video_file.read()
@@ -112,6 +112,7 @@ def main():
                 # st.session_state.processed_video1 = os.path.join(tmp_dir, 'output_video.mp4')
                 
                 print(f"影片路徑: {os.path.join(tmp_dir, 'output_video.mp4')}")
+                out.release()
             else:
                 st.warning("未能讀取視頻幀")
     # if 'processed_video1' in st.session_state:
