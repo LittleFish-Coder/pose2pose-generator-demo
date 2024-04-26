@@ -57,7 +57,7 @@ def pose_estimation(uploaded_file):
             # image_path = os.path.join(output_images_dir, f'frame_{frame_number}.png')
             image_path = os.path.join(tmp_dir, f'frame_{frame_number}.png')
             cv2.imwrite(image_path, black_background)
-
+            print(f"成功保存圖片: {image_path}")
             frame_number += 1
             progress = frame_number / total_frames
             progress_bar.progress(progress)
@@ -80,6 +80,7 @@ def pose_estimation(uploaded_file):
         out.release()
         with open('output.mp4', 'rb') as f:
             video_bytes = f.read()
+            print(len(video_bytes)) # 印出影片bytes長度
         # st.video(video_bytes)
     os.remove('output.mp4')
     return video_bytes
