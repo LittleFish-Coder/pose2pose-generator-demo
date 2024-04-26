@@ -6,9 +6,9 @@ import os
 from natsort import natsorted
 import tempfile
 
-def GAN_model(video):
-    # 將pose estimation後的圖片做GAN model
-    return video
+# def GAN_model(video):
+#     # 將pose estimation後的圖片做GAN model
+#     return video
 
 def main():
     st.title("YYDS影片生成器")
@@ -20,8 +20,9 @@ def main():
             tmp_file.write(uploaded_file.getvalue())
             st.video(uploaded_file)
 
-    pose_estimation_button = st.button("pose_estimation", key="pose_estimation")
-    if pose_estimation_button and uploaded_file is not None:
+    # pose_estimation_button = st.button("pose_estimation", key="pose_estimation")
+    # if pose_estimation_button and uploaded_file is not None:
+    if uploaded_file is not None:
         with tempfile.TemporaryDirectory() as tmp_dir:
             with tempfile.NamedTemporaryFile(delete=False, suffix=".mp4") as tmp_file:
                 tmp_file.write(uploaded_file.getvalue())
@@ -114,11 +115,11 @@ def main():
     #     st.video(st.session_state.processed_video1)
 
    
-    generate_button = st.button("generate", key="generate")
-    if generate_button and uploaded_file is not None:
-        st.session_state.processed_video2 = GAN_model(uploaded_file)
-    if 'processed_video2' in st.session_state:
-        st.video(st.session_state.processed_video2)
+    # generate_button = st.button("generate", key="generate")
+    # if generate_button and uploaded_file is not None:
+    #     st.session_state.processed_video2 = GAN_model(uploaded_file)
+    # if 'processed_video2' in st.session_state:
+    #     st.video(st.session_state.processed_video2)
 
 if __name__ == "__main__":
     main()
