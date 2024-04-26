@@ -115,14 +115,14 @@ def main():
             else:
                 st.warning("未能讀取視頻幀")
             if 'processed_video1' in st.session_state:
-                    st.video(st.session_state.processed_video1)
+                st.video(st.session_state.processed_video1)
 
    
     generate_button = st.button("generate", key="generate")
     if generate_button and uploaded_file is not None:
         st.session_state.processed_video2 = GAN_model(uploaded_file)
     if 'processed_video2' in st.session_state:
-            st.video(st.session_state.processed_video2)
+        st.video(st.session_state.processed_video2)
 
 if __name__ == "__main__":
     main()
