@@ -124,7 +124,8 @@ def main():
                     video_bytes = io.BytesIO(st.session_state.video_data)
                     st.video(video_bytes)
                 else:
-                    st.warning("video_data is None")
+                    
+                    st.video(uploaded_file)
                 # video_name = os.path.basename(uploaded_file.name)
                 # video_document = {
                 #     'name': video_name,
