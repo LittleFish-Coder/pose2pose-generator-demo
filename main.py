@@ -6,12 +6,17 @@ import os
 from natsort import natsorted
 import tempfile
 import io
-from pymongo import MongoClient
+from pymongo.mongo_client import MongoClient
 uri = "mongodb+srv://hunk123321123:WuZpWsmHYj24vZXE@yydscluster.khzeuem.mongodb.net/?retryWrites=true&w=majority&appName=YYDScluster"
 # Create a new client and connect to the server
 client = MongoClient(uri)
-db = client['yydsDatabase']
-collection = db['yydsCollection']
+try:
+    client.admin.command('ping')
+    print("Pinged your deployment. You successfully connected to MongoDB!")
+except Exception as e:
+    print(e)
+# db = client['yydsDatabase']
+# collection = db['yydsCollection']
 # def GAN_model(video):
 #     # 將pose estimation後的圖片做GAN model
 #     return video
