@@ -105,55 +105,53 @@ def main():
                 # image_paths = os.path.join(tmp_dir)
                 # print(f"image_paths: {image_paths}")  # 打印 image_paths
                 image_paths = natsorted(os.path.join(tmp_dir, f'frame_{frame_num}.png') for frame_num in range(frame_number))
-                
-                # 建立影片編碼器
-                fourcc = cv2.VideoWriter_fourcc(*'mp4v')
-                fps = 30.0
-                frame_size = (black_background.shape[1], black_background.shape[0])
-                # print(f"影片路徑: {os.path.join(tmp_dir, 'output_video.mp4')}")
-                out = cv2.VideoWriter(os.path.join(tmp_dir, 'output_video.mp4'), fourcc, fps, frame_size)
+                n_frames = len(image_paths)
+                width, height, fps = black_background.shape[1], black_background.shape[0], 30
+                output_memory_file = io.BytesIO()
+                output = av.open(output_memory_file, 'w',format='mp4')
+                stream = output.add_stream('h264', rate=fps)
+                stream.width = width
+                stream.height = height
+                stream.pix_fmt = 'yuv420p'
                 for image_path in image_paths:
                     frame = cv2.imread(image_path)
-                    # st.image(frame)
-                    out.write(frame)
+                    frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+                    frame = av.VideoFrame.from_ndarray(frame, format='rgb24')
+                    packet = stream.encode(frame)
+                    output.mux(packet)
+                packet = stream.encode(None)
+                output.mux(packet)
+                output.close()
+                output_memory_file.seek(0)
+                video_placeholder.video(output_memory_file, format='video/mp4')
+                # 建立影片編碼器
+                # fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+                # fps = 30.0
+                # frame_size = (black_background.shape[1], black_background.shape[0])
+                # print(f"影片路徑: {os.path.join(tmp_dir, 'output_video.mp4')}")
+                # out = cv2.VideoWriter(os.path.join(tmp_dir, 'output_video.mp4'), fourcc, fps, frame_size)
+                # for image_path in image_paths:
+                #     frame = cv2.imread(image_path)
+                #     # st.image(frame)
+                #     out.write(frame)
                     # print(f"寫入影格: {image_path}")  # 打印寫入的影格路徑
                 # 釋放影片編碼器
-                out.release()
-                print("影片生成完成")
+                # out.release()
+                # print("影片生成完成")
 
-                local_video_path = os.path.join(tmp_dir, 'output_video.mp4')        
-                with open(local_video_path, 'rb') as video_file:
-                    video_data = video_file.read()  
-                if video_data is not None: 
-                    if 'video_data' not in st.session_state:
-                        st.session_state.video_data = video_data
-                    video_bytes = io.BytesIO(st.session_state.video_data)
-                    st.video(video_bytes)
-                    # st.video(uploaded_file)
-                else:
-                    st.warning("未能讀取視頻幀")
+                # local_video_path = os.path.join(tmp_dir, 'output_video.mp4')        
+                # with open(local_video_path, 'rb') as video_file:
+                #     video_data = video_file.read()  
+                # if video_data is not None: 
+                #     if 'video_data' not in st.session_state:
+                #         st.session_state.video_data = video_data
+                #     video_bytes = io.BytesIO(st.session_state.video_data)
+                #     # st.video(video_bytes)
+                #     # st.video(uploaded_file)
+                # else:
+                #     st.warning("未能讀取視頻幀")
                     
-                    # st.video(uploaded_file)
-                # video_name = os.path.basename(uploaded_file.name)
-                # video_document = {
-                #     'name': video_name,
-                #     'video': video_data
-                # }     
-                # collection.insert_one(video_document)
-                # video_document = collection.find_one({'name': video_name})
-                # video_data = video_document['video']
                 
-
-                # 從 st.session_state 獲取影片數據並顯示
-                
-                # video_bytes = io.BytesIO(video_data)
-                # st.video(video_bytes)
-                # 顯示生成的影片
-                # video_file = open(os.path.join(tmp_dir, 'output_video.mp4'), 'rb')
-                # video_bytes = video_file.read()
-                # video_bytes = io.BytesIO(video_file)
-                # video_placeholder.video(video_bytes)
-                # print(f"影片路徑: {os.path.join(tmp_dir, 'output_video.mp4')}")
                 
             else:
                 st.warning("未能讀取視頻幀")
