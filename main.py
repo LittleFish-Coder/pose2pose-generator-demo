@@ -6,6 +6,12 @@ import os
 from natsort import natsorted
 import tempfile
 import io
+from pymongo import MongoClient
+uri = "mongodb+srv://hunk123321123:WuZpWsmHYj24vZXE@yydscluster.khzeuem.mongodb.net/?retryWrites=true&w=majority&appName=YYDScluster"
+# Create a new client and connect to the server
+client = MongoClient(uri)
+db = client['yydsDatabase']
+collection = db['yydsCollection']
 # def GAN_model(video):
 #     # 將pose estimation後的圖片做GAN model
 #     return video
@@ -103,12 +109,26 @@ def main():
                 # 釋放影片編碼器
                 out.release()
                 print("影片生成完成")
+
+                local_video_path = os.path.join(tmp_dir, 'output_video.mp4')        
+                with open(local_video_path, 'rb') as video_file:
+                    video_data = video_file.read()   
+                video_name = os.path.basename(uploaded_file.name)
+                video_document = {
+                    'name': video_name,
+                    'video': video_data
+                }     
+                collection.insert_one(video_document)
+                video_document = collection.find_one({'name': video_name})
+                video_data = video_document['video']
+                video_bytes = io.BytesIO(video_data)
+                st.video(video_bytes)
                 # 顯示生成的影片
-                video_file = open(os.path.join(tmp_dir, 'output_video.mp4'), 'rb')
+                # video_file = open(os.path.join(tmp_dir, 'output_video.mp4'), 'rb')
                 # video_bytes = video_file.read()
-                video_bytes = io.BytesIO(video_file)
-                video_placeholder.video(video_bytes)
-                print(f"影片路徑: {os.path.join(tmp_dir, 'output_video.mp4')}")
+                # video_bytes = io.BytesIO(video_file)
+                # video_placeholder.video(video_bytes)
+                # print(f"影片路徑: {os.path.join(tmp_dir, 'output_video.mp4')}")
                 
             else:
                 st.warning("未能讀取視頻幀")
