@@ -89,14 +89,14 @@ def main():
                 cv2.imwrite(image_path, black_background)
                 # print(f"成功保存圖片: {image_path}")
                 # 每當 frame_number 可被 10 整除時，顯示該幀的圖片
-                if frame_number % 10 == 0:
-                    st.image(black_background, caption=f"Frame {frame_number}", use_column_width=True)
+                # if frame_number % 10 == 0:
+                #     st.image(black_background, caption=f"Frame {frame_number}", use_column_width=True)
                 frame_number += 1
                 progress = frame_number / total_frames
                 progress_bar.progress(progress)
 
             cap.release()
-            progress = 1
+            progress = frame_number / frame_number
             progress_bar.progress(progress)
             print("pose_estimation完成")
             video_placeholder = st.empty()
