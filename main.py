@@ -7,14 +7,14 @@ from natsort import natsorted
 import tempfile
 import io
 from pymongo.mongo_client import MongoClient
-uri = "mongodb+srv://hunk123321123:WuZpWsmHYj24vZXE@yydscluster.khzeuem.mongodb.net/?retryWrites=true&w=majority&appName=YYDScluster"
+
 # Create a new client and connect to the server
-client = MongoClient(uri)
-try:
-    client.admin.command('ping')
-    print("Pinged your deployment. You successfully connected to MongoDB!")
-except Exception as e:
-    print(e)
+# client = MongoClient(uri)/
+# try:
+#     client.admin.command('ping')
+#     print("Pinged your deployment. You successfully connected to MongoDB!")
+# except Exception as e:
+#     print(e)
 # db = client['yydsDatabase']
 # collection = db['yydsCollection']
 # def GAN_model(video):
@@ -118,16 +118,22 @@ def main():
                 local_video_path = os.path.join(tmp_dir, 'output_video.mp4')        
                 with open(local_video_path, 'rb') as video_file:
                     video_data = video_file.read()   
-                video_name = os.path.basename(uploaded_file.name)
-                video_document = {
-                    'name': video_name,
-                    'video': video_data
-                }     
-                collection.insert_one(video_document)
-                video_document = collection.find_one({'name': video_name})
-                video_data = video_document['video']
-                video_bytes = io.BytesIO(video_data)
+                # video_name = os.path.basename(uploaded_file.name)
+                # video_document = {
+                #     'name': video_name,
+                #     'video': video_data
+                # }     
+                # collection.insert_one(video_document)
+                # video_document = collection.find_one({'name': video_name})
+                # video_data = video_document['video']
+                if 'video_data' not in st.session_state:
+                    st.session_state.video_data = video_data
+
+                # 從 st.session_state 獲取影片數據並顯示
+                video_bytes = io.BytesIO(st.session_state.video_data)
                 st.video(video_bytes)
+                # video_bytes = io.BytesIO(video_data)
+                # st.video(video_bytes)
                 # 顯示生成的影片
                 # video_file = open(os.path.join(tmp_dir, 'output_video.mp4'), 'rb')
                 # video_bytes = video_file.read()
