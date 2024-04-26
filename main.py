@@ -5,7 +5,7 @@ import numpy as np
 import os
 from natsort import natsorted
 import tempfile
-
+import io
 # def GAN_model(video):
 #     # 將pose estimation後的圖片做GAN model
 #     return video
@@ -105,7 +105,8 @@ def main():
                 print("影片生成完成")
                 # 顯示生成的影片
                 video_file = open(os.path.join(tmp_dir, 'output_video.mp4'), 'rb')
-                video_bytes = video_file.read()
+                # video_bytes = video_file.read()
+                video_bytes = io.BytesIO(video_file)
                 video_placeholder.video(video_bytes)
                 print(f"影片路徑: {os.path.join(tmp_dir, 'output_video.mp4')}")
                 
