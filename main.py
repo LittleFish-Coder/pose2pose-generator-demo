@@ -122,7 +122,6 @@ def main():
                 exit()
 
             frame_number = 0
-            image_paths = []
 
             while cap.isOpened():
                 ret, frame = cap.read()
@@ -145,7 +144,6 @@ def main():
                 image_path = os.path.join(tmp_dir, f'frame_{frame_number}.png')
                 cv2.imwrite(image_path, black_background)
                 print(f"成功保存圖片: {image_path}")
-                image_paths.append(image_path)
                 frame_number += 1
                 progress = frame_number / total_frames
                 progress_bar.progress(progress)
@@ -155,14 +153,17 @@ def main():
 
             # 檢查 frame_number 是否大於 0
             if frame_number > 0:
-                image_paths = natsorted(image_paths)
-                frame_size = (black_background.shape[1], black_background.shape[0])
+                # image_paths = natsorted(image_paths)
+                image_paths = natsorted(os.path.join(tmp_dir, f'frame_{frame_num}.png') for frame_num in range(frame_number))
+                
 
                 # 建立影片編碼器
                 fourcc = cv2.VideoWriter_fourcc(*'mp4v')
                 fps = 30.0
-                processed_video_path = os.path.join(tmp_dir, 'output_video.mp4')
-                out = cv2.VideoWriter(processed_video_path, fourcc, fps, frame_size)
+                frame_size = (black_background.shape[1], black_background.shape[0])
+                # processed_video_path = os.path.join(tmp_dir, 'output_video.mp4')
+                # out = cv2.VideoWriter(processed_video_path, fourcc, fps, frame_size)
+                out = cv2.VideoWriter(os.path.join(tmp_dir, 'output_video.mp4'), fourcc, fps, frame_size)
 
                 # 寫入影格並編碼成影片
                 for image_path in image_paths:
@@ -173,12 +174,7 @@ def main():
                 out.release()
                 print("影片生成完成")
 
-                # 讀取生成的影片檔案
-                with open(processed_video_path, 'rb') as f:
-                    video_bytes = f.read()
-
-                # 顯示影片
-                st.video(video_bytes)
+                st.video(os.path.join(tmp_dir, 'output_video.mp4'))
             else:
                 st.warning("未能讀取視頻幀")
         # st.video(processed_video)
