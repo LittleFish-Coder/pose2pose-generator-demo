@@ -7,20 +7,6 @@ from natsort import natsorted
 import tempfile
 import io
 import av
-# from pymongo.mongo_client import MongoClient
-
-# Create a new client and connect to the server
-# client = MongoClient(uri)/
-# try:
-#     client.admin.command('ping')
-#     print("Pinged your deployment. You successfully connected to MongoDB!")
-# except Exception as e:
-#     print(e)
-# db = client['yydsDatabase']
-# collection = db['yydsCollection']
-# def GAN_model(video):
-#     # 將pose estimation後的圖片做GAN model
-#     return video
 
 def main():
     st.title("YYDS影片生成器")
@@ -32,8 +18,6 @@ def main():
             tmp_file.write(uploaded_file.getvalue())
             st.video(uploaded_file)
 
-    # pose_estimation_button = st.button("pose_estimation", key="pose_estimation")
-    # if pose_estimation_button and uploaded_file is not None:
     if uploaded_file is not None:
         with tempfile.TemporaryDirectory() as tmp_dir:
             with tempfile.NamedTemporaryFile(delete=False, suffix=".mp4") as tmp_file:
@@ -45,13 +29,8 @@ def main():
             mp_drawing = mp.solutions.drawing_utils
             pose = mp_pose.Pose()
 
-            # vid = uploaded_file.name
-            # with open(vid, mode='wb') as f:
-            #     f.write(uploaded_file.read()) # save video to disk
-
             # Open the video file
             cap = cv2.VideoCapture(tmp_file_path)
-            # cap = cv2.VideoCapture(vid)
             total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
             progress_bar = st.progress(0)  # 初始化進度條
 
@@ -87,8 +66,7 @@ def main():
 
                 image_path = os.path.join(tmp_dir, f'frame_{frame_number}.png')
                 cv2.imwrite(image_path, black_background)
-                # print(f"成功保存圖片: {image_path}")
-                # 每當 frame_number 可被 10 整除時，顯示該幀的圖片
+
                 # if frame_number % 10 == 0:
                 #     st.image(black_background, caption=f"Frame {frame_number}", use_column_width=True)
                 frame_number += 1
@@ -102,8 +80,6 @@ def main():
             video_placeholder = st.empty()
             # 檢查 frame_number 是否大於 0
             if frame_number > 0:
-                # image_paths = os.path.join(tmp_dir)
-                # print(f"image_paths: {image_paths}")  # 打印 image_paths
                 image_paths = natsorted(os.path.join(tmp_dir, f'frame_{frame_num}.png') for frame_num in range(frame_number))
                 n_frames = len(image_paths)
                 width, height, fps = black_background.shape[1], black_background.shape[0], 30
@@ -124,35 +100,6 @@ def main():
                 output.close()
                 output_memory_file.seek(0)
                 video_placeholder.video(output_memory_file, format='video/mp4')
-                # 建立影片編碼器
-                # fourcc = cv2.VideoWriter_fourcc(*'mp4v')
-                # fps = 30.0
-                # frame_size = (black_background.shape[1], black_background.shape[0])
-                # print(f"影片路徑: {os.path.join(tmp_dir, 'output_video.mp4')}")
-                # out = cv2.VideoWriter(os.path.join(tmp_dir, 'output_video.mp4'), fourcc, fps, frame_size)
-                # for image_path in image_paths:
-                #     frame = cv2.imread(image_path)
-                #     # st.image(frame)
-                #     out.write(frame)
-                    # print(f"寫入影格: {image_path}")  # 打印寫入的影格路徑
-                # 釋放影片編碼器
-                # out.release()
-                # print("影片生成完成")
-
-                # local_video_path = os.path.join(tmp_dir, 'output_video.mp4')        
-                # with open(local_video_path, 'rb') as video_file:
-                #     video_data = video_file.read()  
-                # if video_data is not None: 
-                #     if 'video_data' not in st.session_state:
-                #         st.session_state.video_data = video_data
-                #     video_bytes = io.BytesIO(st.session_state.video_data)
-                #     # st.video(video_bytes)
-                #     # st.video(uploaded_file)
-                # else:
-                #     st.warning("未能讀取視頻幀")
-                    
-                
-                
             else:
                 st.warning("未能讀取視頻幀")
     # if 'processed_video1' in st.session_state:
