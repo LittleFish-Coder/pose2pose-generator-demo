@@ -117,7 +117,14 @@ def main():
 
                 local_video_path = os.path.join(tmp_dir, 'output_video.mp4')        
                 with open(local_video_path, 'rb') as video_file:
-                    video_data = video_file.read()   
+                    video_data = video_file.read()  
+                if video_data is not None: 
+                    if 'video_data' not in st.session_state:
+                        st.session_state.video_data = video_data
+                    video_bytes = io.BytesIO(st.session_state.video_data)
+                    st.video(video_bytes)
+                else:
+                    st.warning("video_data is None")
                 # video_name = os.path.basename(uploaded_file.name)
                 # video_document = {
                 #     'name': video_name,
@@ -126,12 +133,10 @@ def main():
                 # collection.insert_one(video_document)
                 # video_document = collection.find_one({'name': video_name})
                 # video_data = video_document['video']
-                if 'video_data' not in st.session_state:
-                    st.session_state.video_data = video_data
+                
 
                 # 從 st.session_state 獲取影片數據並顯示
-                video_bytes = io.BytesIO(st.session_state.video_data)
-                st.video(video_bytes)
+                
                 # video_bytes = io.BytesIO(video_data)
                 # st.video(video_bytes)
                 # 顯示生成的影片
