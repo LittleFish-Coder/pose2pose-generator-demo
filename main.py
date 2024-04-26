@@ -84,9 +84,9 @@ def main():
             video_placeholder = st.empty()
             # 檢查 frame_number 是否大於 0
             if frame_number > 0:
-                image_paths = os.path.join(tmp_dir)
-                print(f"image_paths: {image_paths}")  # 打印 image_paths
-                # image_paths = natsorted(os.path.join(tmp_dir, f'frame_{frame_num}.png') for frame_num in range(frame_number))
+                # image_paths = os.path.join(tmp_dir)
+                # print(f"image_paths: {image_paths}")  # 打印 image_paths
+                image_paths = natsorted(os.path.join(tmp_dir, f'frame_{frame_num}.png') for frame_num in range(frame_number))
                 
                 # 建立影片編碼器
                 fourcc = cv2.VideoWriter_fourcc(*'mp4v')
