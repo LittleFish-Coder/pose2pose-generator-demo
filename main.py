@@ -99,7 +99,7 @@ def main():
                 # for image_path in image_paths:
                 #     frame = cv2.imread(image_path)
                 #     out.write(frame)
-                for image_path in os.listdir(image_paths):
+                for image_path in image_paths:
                     frame = cv2.imread(os.path.join(image_paths, image_path))
                     out.write(frame)
                     print(f"寫入影格: {os.path.join(image_paths, image_path)}")  # 打印寫入的影格路徑
