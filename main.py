@@ -70,11 +70,16 @@ def main():
                 image_path = os.path.join(tmp_dir, f'frame_{frame_number}.png')
                 cv2.imwrite(image_path, black_background)
                 print(f"成功保存圖片: {image_path}")
+                # 每當 frame_number 可被 10 整除時，顯示該幀的圖片
+                if frame_number % 10 == 0:
+                    st.image(black_background, caption=f"Frame {frame_number}", use_column_width=True)
                 frame_number += 1
                 progress = frame_number / total_frames
                 progress_bar.progress(progress)
 
             cap.release()
+            progress = total_frames / total_frames
+            progress_bar.progress(progress)
             print("pose_estimation完成")
             video_placeholder = st.empty()
             # 檢查 frame_number 是否大於 0
@@ -103,10 +108,7 @@ def main():
                 video_placeholder.video(os.path.join(tmp_dir, 'output_video.mp4'))
             else:
                 st.warning("未能讀取視頻幀")
-        # st.video(processed_video)
-    #     st.session_state.processed_video1 = pose_estimation(uploaded_file)
-    # if 'processed_video1' in st.session_state:
-    #     st.video(st.session_state.processed_video1)
+
 
    
     generate_button = st.button("generate", key="generate")
