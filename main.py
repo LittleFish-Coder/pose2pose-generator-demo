@@ -6,7 +6,10 @@ import os
 from natsort import natsorted
 import tempfile
 
-def pose_estimation(video):
+def pose_estimation(uploaded_file):
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".mp4") as tmp_file:
+        tmp_file.write(uploaded_file.getvalue())
+        tmp_file_path = tmp_file.name
     with tempfile.TemporaryDirectory() as tmp_dir:
     # video_path = 'clip.mp4'
     # output_images_dir = 'outputImages'
@@ -19,7 +22,7 @@ def pose_estimation(video):
         pose = mp_pose.Pose()
 
         # Open the video file
-        cap = cv2.VideoCapture(video)
+        cap = cv2.VideoCapture(tmp_file_path)
         # Initialize an empty frame and black background image
         ret, frame = cap.read()
         if ret:
