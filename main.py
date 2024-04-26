@@ -101,6 +101,7 @@ def main():
                 #     out.write(frame)
                 for image_path in image_paths:
                     frame = cv2.imread(image_path)
+                    st.image(frame)
                     out.write(frame)
                     print(f"寫入影格: {image_path}")  # 打印寫入的影格路徑
                 # 釋放影片編碼器
