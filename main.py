@@ -71,8 +71,8 @@ def main():
                 cv2.imwrite(image_path, black_background)
                 print(f"成功保存圖片: {image_path}")
                 # 每當 frame_number 可被 10 整除時，顯示該幀的圖片
-                if frame_number % 10 == 0:
-                    st.image(black_background, caption=f"Frame {frame_number}", use_column_width=True)
+                # if frame_number % 10 == 0:
+                #     st.image(black_background, caption=f"Frame {frame_number}", use_column_width=True)
                 frame_number += 1
                 progress = frame_number / total_frames
                 progress_bar.progress(progress)
@@ -84,8 +84,8 @@ def main():
             # video_placeholder = st.empty()
             # 檢查 frame_number 是否大於 0
             if frame_number > 0:
-                # image_paths = natsorted(image_paths)
-                image_paths = natsorted(os.path.join(tmp_dir, f'frame_{frame_num}.png') for frame_num in range(frame_number))
+                image_paths = os.path.join(tmp_dir)
+                # image_paths = natsorted(os.path.join(tmp_dir, f'frame_{frame_num}.png') for frame_num in range(frame_number))
                 
                 # 建立影片編碼器
                 fourcc = cv2.VideoWriter_fourcc(*'mp4v')
