@@ -122,10 +122,12 @@ def main():
                     if 'video_data' not in st.session_state:
                         st.session_state.video_data = video_data
                     video_bytes = io.BytesIO(st.session_state.video_data)
-                    st.video(video_bytes)
-                else:
-                    
+                    # st.video(video_bytes)
                     st.video(uploaded_file)
+                else:
+                    st.warning("未能讀取視頻幀")
+                    
+                    # st.video(uploaded_file)
                 # video_name = os.path.basename(uploaded_file.name)
                 # video_document = {
                 #     'name': video_name,
