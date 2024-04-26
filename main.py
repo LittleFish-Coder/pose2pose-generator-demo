@@ -23,6 +23,8 @@ def pose_estimation(uploaded_file):
 
         # Open the video file
         cap = cv2.VideoCapture(tmp_file_path)
+        total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+        progress_bar = st.progress(0)  # 初始化進度條
         # Initialize an empty frame and black background image
         ret, frame = cap.read()
         if ret:
@@ -57,6 +59,8 @@ def pose_estimation(uploaded_file):
             cv2.imwrite(image_path, black_background)
 
             frame_number += 1
+            progress = frame_number / total_frames
+            progress_bar.progress(progress)
         cap.release()
         # 取得所有輸出影像路徑並自然排序
         # image_paths = natsorted(os.path.join(output_images_dir, f'frame_{frame_num}.png') for frame_num in range(frame_number))
