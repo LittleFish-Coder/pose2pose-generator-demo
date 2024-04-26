@@ -69,7 +69,7 @@ def pose_estimation(uploaded_file, tmp_dir):
         # 建立影片編碼器
         # fourcc = cv2.VideoWriter_fourcc(*'mp4v')
         # fps = 30.0  # 影片幀率
-        # frame_size = (black_background.shape[1], black_background.shape[0])  # 影格大小
+        frame_size = (black_background.shape[1], black_background.shape[0])  # 影格大小
         # # out = cv2.VideoWriter(os.path.join(output_video_dir, 'output_video.mp4'), fourcc, fps, frame_size)
         # out = cv2.VideoWriter(os.path.join(tmp_dir, 'output_video.mp4'), fourcc, fps, frame_size)
         # # 寫入影格並編碼成影片
@@ -79,7 +79,7 @@ def pose_estimation(uploaded_file, tmp_dir):
         # # 釋放影片編碼器
         # out.release()
         # print("影片生成完成")
-        return image_paths
+        return image_paths,frame_size
 def GAN_model(video):
     # 將pose estimation後的圖片做GAN model
     return video
@@ -98,27 +98,26 @@ def main():
     if pose_estimation_button and uploaded_file is not None:
         with tempfile.TemporaryDirectory() as tmp_dir:
             # processed_video_path = os.path.join(tmp_dir, 'output_video.mp4')
-            image_paths = pose_estimation(uploaded_file,tmp_dir)
+            image_paths, frame_size = pose_estimation(uploaded_file, tmp_dir)
             
-           # 建立影片編碼器
-            fourcc = cv2.VideoWriter_fourcc(*'mp4v')
-            fps = 30.0  # 影片幀率
-            frame_size = cv2.imread(image_paths[0]).shape[:2][::-1]  # 影格大小
-            processed_video_path = os.path.join(tmp_dir, 'output_video.mp4')
-            out = cv2.VideoWriter(processed_video_path, fourcc, fps, frame_size)
+            if frame_size is not None:
+                fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+                fps = 30.0
+                processed_video_path = os.path.join(tmp_dir, 'output_video.mp4')
+                out = cv2.VideoWriter(processed_video_path, fourcc, fps, frame_size)
 
-            # 寫入影格並編碼成影片
-            for image_path in image_paths:
-                frame = cv2.imread(image_path)
-                out.write(frame)
-            # 釋放影片編碼器
-            out.release()
-            # 讀取生成的影片檔案
-            with open(processed_video_path, 'rb') as f:
-                video_bytes = f.read()
+                for image_path in image_paths:
+                    frame = cv2.imread(image_path)
+                    out.write(frame)
 
-            # 顯示影片
-            st.video(video_bytes)
+                out.release()
+
+                with open(processed_video_path, 'rb') as f:
+                    video_bytes = f.read()
+
+                st.video(video_bytes)
+            else:
+                st.warning("未能讀取視頻幀")
         # st.video(processed_video)
     #     st.session_state.processed_video1 = pose_estimation(uploaded_file)
     # if 'processed_video1' in st.session_state:
