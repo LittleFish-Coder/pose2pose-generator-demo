@@ -6,7 +6,7 @@ import os
 from natsort import natsorted
 import tempfile
 import io
-from pymongo.mongo_client import MongoClient
+# from pymongo.mongo_client import MongoClient
 
 # Create a new client and connect to the server
 # client = MongoClient(uri)/
