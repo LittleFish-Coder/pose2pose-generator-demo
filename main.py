@@ -62,6 +62,7 @@ def pose_estimation(uploaded_file):
             progress = frame_number / total_frames
             progress_bar.progress(progress)
         cap.release()
+        print("pose_estimation完成")
         # 取得所有輸出影像路徑並自然排序
         # image_paths = natsorted(os.path.join(output_images_dir, f'frame_{frame_num}.png') for frame_num in range(frame_number))
         image_paths = natsorted(os.path.join(tmp_dir, f'frame_{frame_num}.png') for frame_num in range(frame_number))
