@@ -71,20 +71,14 @@ def pose_estimation(uploaded_file):
         fps = 30.0  # 影片幀率
         frame_size = (black_background.shape[1], black_background.shape[0])  # 影格大小
         # out = cv2.VideoWriter(os.path.join(output_video_dir, 'output_video.mp4'), fourcc, fps, frame_size)
-        out = cv2.VideoWriter('output.mp4', fourcc, fps, frame_size)
+        out = cv2.VideoWriter(os.path.join(tmp_dir, 'output_video.mp4'), fourcc, fps, frame_size)
         # 寫入影格並編碼成影片
         for image_path in image_paths:
             frame = cv2.imread(image_path)
             out.write(frame)
-
         # 釋放影片編碼器
         out.release()
-        with open('output.mp4', 'rb') as f:
-            video_bytes = f.read()
-            print(len(video_bytes)) # 印出影片bytes長度
-        # st.video(video_bytes)
-    os.remove('output.mp4')
-    return video_bytes
+        print("影片生成完成")
 
 def GAN_model(video):
     # 將pose estimation後的圖片做GAN model
@@ -102,8 +96,17 @@ def main():
 
     pose_estimation_button = st.button("pose_estimation", key="pose_estimation")
     if pose_estimation_button and uploaded_file is not None:
-        processed_video = pose_estimation(uploaded_file)
-        st.video(processed_video)
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            processed_video_path = os.path.join(tmp_dir, 'output_video.mp4')
+            pose_estimation(uploaded_file)
+            
+            # 讀取生成的影片檔案
+            with open(processed_video_path, 'rb') as f:
+                video_bytes = f.read()
+            
+            # 顯示影片
+            st.video(video_bytes)
+        # st.video(processed_video)
     #     st.session_state.processed_video1 = pose_estimation(uploaded_file)
     # if 'processed_video1' in st.session_state:
     #     st.video(st.session_state.processed_video1)
