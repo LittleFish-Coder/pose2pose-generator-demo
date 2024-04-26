@@ -69,7 +69,7 @@ def main():
 
                 image_path = os.path.join(tmp_dir, f'frame_{frame_number}.png')
                 cv2.imwrite(image_path, black_background)
-                print(f"成功保存圖片: {image_path}")
+                # print(f"成功保存圖片: {image_path}")
                 # 每當 frame_number 可被 10 整除時，顯示該幀的圖片
                 # if frame_number % 10 == 0:
                 #     st.image(black_background, caption=f"Frame {frame_number}", use_column_width=True)
@@ -94,11 +94,6 @@ def main():
                 frame_size = (black_background.shape[1], black_background.shape[0])
                 # print(f"影片路徑: {os.path.join(tmp_dir, 'output_video.mp4')}")
                 out = cv2.VideoWriter(os.path.join(tmp_dir, 'output_video.mp4'), fourcc, fps, frame_size)
-
-                # 寫入影格並編碼成影片
-                # for image_path in image_paths:
-                #     frame = cv2.imread(image_path)
-                #     out.write(frame)
                 for image_path in image_paths:
                     frame = cv2.imread(image_path)
                     # st.image(frame)
@@ -107,11 +102,10 @@ def main():
                 # 釋放影片編碼器
                 out.release()
                 print("影片生成完成")
-                # video_file = open(os.path.join(tmp_dir, 'output_video.mp4'), 'rb')
-                # video_bytes = video_file.read()
-                st.video(os.path.join(tmp_dir, 'output_video.mp4'))
-                # st.session_state.processed_video1 = os.path.join(tmp_dir, 'output_video.mp4')
-                
+                # 顯示生成的影片
+                video_file = open(os.path.join(tmp_dir, 'output_video.mp4'), 'rb')
+                video_bytes = video_file.read()
+                video_placeholder.video(video_bytes)
                 print(f"影片路徑: {os.path.join(tmp_dir, 'output_video.mp4')}")
                 
             else:
