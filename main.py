@@ -6,6 +6,7 @@ import os
 from natsort import natsorted
 import tempfile
 import io
+import av
 # from pymongo.mongo_client import MongoClient
 
 # Create a new client and connect to the server
@@ -44,8 +45,13 @@ def main():
             mp_drawing = mp.solutions.drawing_utils
             pose = mp_pose.Pose()
 
+            # vid = uploaded_file.name
+            # with open(vid, mode='wb') as f:
+            #     f.write(uploaded_file.read()) # save video to disk
+
             # Open the video file
             cap = cv2.VideoCapture(tmp_file_path)
+            # cap = cv2.VideoCapture(vid)
             total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
             progress_bar = st.progress(0)  # 初始化進度條
 
@@ -83,14 +89,14 @@ def main():
                 cv2.imwrite(image_path, black_background)
                 # print(f"成功保存圖片: {image_path}")
                 # 每當 frame_number 可被 10 整除時，顯示該幀的圖片
-                # if frame_number % 10 == 0:
-                #     st.image(black_background, caption=f"Frame {frame_number}", use_column_width=True)
+                if frame_number % 10 == 0:
+                    st.image(black_background, caption=f"Frame {frame_number}", use_column_width=True)
                 frame_number += 1
                 progress = frame_number / total_frames
                 progress_bar.progress(progress)
 
             cap.release()
-            progress = total_frames / total_frames
+            progress = 1
             progress_bar.progress(progress)
             print("pose_estimation完成")
             video_placeholder = st.empty()
@@ -122,8 +128,8 @@ def main():
                     if 'video_data' not in st.session_state:
                         st.session_state.video_data = video_data
                     video_bytes = io.BytesIO(st.session_state.video_data)
-                    # st.video(video_bytes)
-                    st.video(uploaded_file)
+                    st.video(video_bytes)
+                    # st.video(uploaded_file)
                 else:
                     st.warning("未能讀取視頻幀")
                     
