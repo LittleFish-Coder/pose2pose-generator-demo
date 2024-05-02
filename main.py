@@ -8,119 +8,115 @@ import tempfile
 import io
 import av
 
-def main():
-    st.title("YYDS影片生成器")
-    # set wide mode
-    st.set_page_config(layout="wide")
-    col1, col2, col3 = st.columns([3, 1, 3],gap='large')
-    
-    with col1:
-    # 輸入影片
-        uploaded_file = st.file_uploader("選擇一個影片檔", type=['mp4', 'avi', 'mov'])
+st.title("YYDS影片生成器")
+# set wide mode
+st.set_page_config(layout="wide")
+col1, col2, col3 = st.columns([3, 1, 3],gap='large')
+
+with col1:
+# 輸入影片
+    uploaded_file = st.file_uploader("選擇一個影片檔", type=['mp4', 'avi', 'mov'])
+    if uploaded_file is not None:
+        with tempfile.NamedTemporaryFile(delete=False) as tmp_file:
+            tmp_file.write(uploaded_file.getvalue())
+            st.video(uploaded_file)
+with col2:
+    st.write('')
+    inference_button = st.button('Inference')
+with col3:
+    if inference_button:
+        st.write('Inference button clicked')
+        st.write('Displaying the image')
         if uploaded_file is not None:
-            with tempfile.NamedTemporaryFile(delete=False) as tmp_file:
-                tmp_file.write(uploaded_file.getvalue())
-                st.video(uploaded_file)
-    with col2:
-        st.write('')
-        inference_button = st.button('Inference')
-    with col3:
-        if inference_button:
-            st.write('Inference button clicked')
-            st.write('Displaying the image')
-            if uploaded_file is not None:
-                with tempfile.TemporaryDirectory() as tmp_dir:
-                    with tempfile.NamedTemporaryFile(delete=False, suffix=".mp4") as tmp_file:
-                        tmp_file.write(uploaded_file.getvalue())
-                        tmp_file_path = tmp_file.name
+            with tempfile.TemporaryDirectory() as tmp_dir:
+                with tempfile.NamedTemporaryFile(delete=False, suffix=".mp4") as tmp_file:
+                    tmp_file.write(uploaded_file.getvalue())
+                    tmp_file_path = tmp_file.name
 
-                    # Initialize MediaPipe Pose and Drawing utilities
-                    mp_pose = mp.solutions.pose
-                    mp_drawing = mp.solutions.drawing_utils
-                    pose = mp_pose.Pose()
+                # Initialize MediaPipe Pose and Drawing utilities
+                mp_pose = mp.solutions.pose
+                mp_drawing = mp.solutions.drawing_utils
+                pose = mp_pose.Pose()
 
-                    # Open the video file
-                    cap = cv2.VideoCapture(tmp_file_path)
-                    total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
-                    progress_bar = st.progress(0)  # 初始化進度條
+                # Open the video file
+                cap = cv2.VideoCapture(tmp_file_path)
+                total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+                progress_bar = st.progress(0)  # 初始化進度條
 
-                    # Initialize an empty frame and black background image
-                    ret, frame = cap.read()
-                    if ret:
-                        frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-                        black_background = np.zeros_like(frame_rgb)
-                    else:
-                        print("Failed to read the first frame from the video file.")
-                        cap.release()
-                        exit()
-
-                    frame_number = 0
-
-                    while cap.isOpened():
-                        ret, frame = cap.read()
-                        if not ret:
-                            break
-
-                        # Convert the frame to RGB
-                        frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-
-                        # Create a black background image
-                        black_background = np.zeros_like(frame_rgb)
-
-                        # Process the frame with MediaPipe Pose
-                        result = pose.process(frame_rgb)
-
-                        # Draw the pose landmarks on the black background
-                        if result.pose_landmarks:
-                            mp_drawing.draw_landmarks(black_background, result.pose_landmarks, mp_pose.POSE_CONNECTIONS)
-
-                        image_path = os.path.join(tmp_dir, f'frame_{frame_number}.png')
-                        cv2.imwrite(image_path, black_background)
-
-                        # if frame_number % 10 == 0:
-                        #     st.image(black_background, caption=f"Frame {frame_number}", use_column_width=True)
-                        frame_number += 1
-                        progress = frame_number / total_frames
-                        progress_bar.progress(progress)
-
+                # Initialize an empty frame and black background image
+                ret, frame = cap.read()
+                if ret:
+                    frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+                    black_background = np.zeros_like(frame_rgb)
+                else:
+                    print("Failed to read the first frame from the video file.")
                     cap.release()
-                    progress = frame_number / frame_number
+                    exit()
+
+                frame_number = 0
+
+                while cap.isOpened():
+                    ret, frame = cap.read()
+                    if not ret:
+                        break
+
+                    # Convert the frame to RGB
+                    frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+
+                    # Create a black background image
+                    black_background = np.zeros_like(frame_rgb)
+
+                    # Process the frame with MediaPipe Pose
+                    result = pose.process(frame_rgb)
+
+                    # Draw the pose landmarks on the black background
+                    if result.pose_landmarks:
+                        mp_drawing.draw_landmarks(black_background, result.pose_landmarks, mp_pose.POSE_CONNECTIONS)
+
+                    image_path = os.path.join(tmp_dir, f'frame_{frame_number}.png')
+                    cv2.imwrite(image_path, black_background)
+
+                    # if frame_number % 10 == 0:
+                    #     st.image(black_background, caption=f"Frame {frame_number}", use_column_width=True)
+                    frame_number += 1
+                    progress = frame_number / total_frames
                     progress_bar.progress(progress)
-                    print("pose_estimation完成")
-                    video_placeholder = st.empty()
-                    # 檢查 frame_number 是否大於 0
-                    if frame_number > 0:
-                        image_paths = natsorted(os.path.join(tmp_dir, f'frame_{frame_num}.png') for frame_num in range(frame_number))
-                        n_frames = len(image_paths)
-                        width, height, fps = black_background.shape[1], black_background.shape[0], 30
-                        output_memory_file = io.BytesIO()
-                        output = av.open(output_memory_file, 'w',format='mp4')
-                        stream = output.add_stream('h264', rate=fps)
-                        stream.width = width
-                        stream.height = height
-                        stream.pix_fmt = 'yuv420p'
-                        for image_path in image_paths:
-                            frame = cv2.imread(image_path)
-                            frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-                            frame = av.VideoFrame.from_ndarray(frame, format='rgb24')
-                            packet = stream.encode(frame)
-                            output.mux(packet)
-                        packet = stream.encode(None)
+
+                cap.release()
+                progress = frame_number / frame_number
+                progress_bar.progress(progress)
+                print("pose_estimation完成")
+                video_placeholder = st.empty()
+                # 檢查 frame_number 是否大於 0
+                if frame_number > 0:
+                    image_paths = natsorted(os.path.join(tmp_dir, f'frame_{frame_num}.png') for frame_num in range(frame_number))
+                    n_frames = len(image_paths)
+                    width, height, fps = black_background.shape[1], black_background.shape[0], 30
+                    output_memory_file = io.BytesIO()
+                    output = av.open(output_memory_file, 'w',format='mp4')
+                    stream = output.add_stream('h264', rate=fps)
+                    stream.width = width
+                    stream.height = height
+                    stream.pix_fmt = 'yuv420p'
+                    for image_path in image_paths:
+                        frame = cv2.imread(image_path)
+                        frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+                        frame = av.VideoFrame.from_ndarray(frame, format='rgb24')
+                        packet = stream.encode(frame)
                         output.mux(packet)
-                        output.close()
-                        output_memory_file.seek(0)
-                        video_placeholder.video(output_memory_file, format='video/mp4')
-                    else:
-                        st.warning("未能讀取視頻幀")
-    # if 'processed_video1' in st.session_state:
-    #     st.video(st.session_state.processed_video1)
+                    packet = stream.encode(None)
+                    output.mux(packet)
+                    output.close()
+                    output_memory_file.seek(0)
+                    video_placeholder.video(output_memory_file, format='video/mp4')
+                else:
+                    st.warning("未能讀取視頻幀")
+# if 'processed_video1' in st.session_state:
+#     st.video(st.session_state.processed_video1)
 
-   
-    # generate_button = st.button("generate", key="generate")
-    # if generate_button and uploaded_file is not None:
-    #     st.session_state.processed_video2 = GAN_model(uploaded_file)
-    # if 'processed_video2' in st.session_state:
-    #     st.video(st.session_state.processed_video2)
 
-if __name__ == "__main__":
-    main()
+# generate_button = st.button("generate", key="generate")
+# if generate_button and uploaded_file is not None:
+#     st.session_state.processed_video2 = GAN_model(uploaded_file)
+# if 'processed_video2' in st.session_state:
+#     st.video(st.session_state.processed_video2)
