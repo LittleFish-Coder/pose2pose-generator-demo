@@ -36,6 +36,7 @@ with col3:
                 mp_pose = mp.solutions.pose
                 mp_drawing = mp.solutions.drawing_utils
                 pose = mp_pose.Pose()
+                mp_drawing_styles = mp.solutions.drawing_styles
 
                 # Open the video file
                 cap = cv2.VideoCapture(tmp_file_path)
@@ -70,7 +71,7 @@ with col3:
 
                     # Draw the pose landmarks on the black background
                     if result.pose_landmarks:
-                        mp_drawing.draw_landmarks(black_background, result.pose_landmarks, mp_pose.POSE_CONNECTIONS)
+                        mp_drawing.draw_landmarks(black_background, result.pose_landmarks, mp_pose.POSE_CONNECTIONS, landmark_drawing_spec=mp_drawing_styles.get_default_pose_landmarks_style())
 
                     image_path = os.path.join(tmp_dir, f'frame_{frame_number}.png')
                     cv2.imwrite(image_path, black_background)
