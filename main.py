@@ -85,6 +85,7 @@ with col3:
                 progress = frame_number / frame_number
                 progress_bar.progress(progress)
                 print("pose_estimation完成")
+                
                 video_placeholder = st.empty()
                 # 檢查 frame_number 是否大於 0
                 if frame_number > 0:
@@ -107,11 +108,13 @@ with col3:
                     output.mux(packet)
                     output.close()
                     output_memory_file.seek(0)
-                    video_placeholder.video(output_memory_file, format='video/mp4')
+                    st.session_state.processed_video1 = output_memory_file
+                    # video_placeholder.video(output_memory_file, format='video/mp4')
+                    if 'processed_video1' in st.session_state:
+                        video_placeholder.video(st.session_state.processed_video1,format='video/mp4')
+                    
                 else:
                     st.warning("未能讀取視頻幀")
-# if 'processed_video1' in st.session_state:
-#     st.video(st.session_state.processed_video1)
 
 
 # generate_button = st.button("generate", key="generate")
