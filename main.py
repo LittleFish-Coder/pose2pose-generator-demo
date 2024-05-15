@@ -55,69 +55,68 @@ with col3:
 
                 frame_number = 0
                 mp_holistic = mp.solutions.holistic             # mediapipe 全身偵測方法
-                # mp_hands = mp.solutions.hands
+                mp_hands = mp.solutions.hands
 
-                with mp_holistic.Holistic(
-                    min_detection_confidence=0.5,
-                    min_tracking_confidence=0.5) as holistic:
-                    while cap.isOpened():
-                        success, image = cap.read()
-                        if not success:
-                            print("Ignoring empty camera frame.")
-                        # If loading a video, use 'break' instead of 'continue'.
-                            break   
-
-                        # To improve performance, optionally mark the image as not writeable to
-                        # pass by reference.
-                        black_background = np.zeros_like(image)
-
-                        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-                        results = holistic.process(image)
-
-                        # mp_drawing.draw_landmarks(
-                        #     black_background,
-                        #     results.face_landmarks,
-                        #     mp_holistic.FACEMESH_CONTOURS,
-                        #     landmark_drawing_spec=None,
-                        #     connection_drawing_spec=mp_drawing_styles
-                        #     .get_default_face_mesh_contours_style())
-                        mp_drawing.draw_landmarks(
-                            black_background,
-                            results.pose_landmarks,
-                            mp_holistic.POSE_CONNECTIONS,
-                            landmark_drawing_spec=mp_drawing_styles
-                            .get_default_pose_landmarks_style())
-                        # Flip the image horizontally for a selfie-view display.
-                        image_path = os.path.join(tmp_dir, f'frame_{frame_number}.png')
-                        cv2.imwrite(image_path, black_background)
-                # with mp_hands.Hands(
-                #     model_complexity=0,
-                #     min_detection_confidence=0.1,
-                #     min_tracking_confidence=0.1) as hands:
+                # with mp_holistic.Holistic(
+                #     min_detection_confidence=0.5,
+                #     min_tracking_confidence=0.5) as holistic:
                 #     while cap.isOpened():
-                        
-                #         ret, frame = cap.read()
-                #         if not ret:
-                #             break
-                #         frame = cv2.resize(frame, None, fx=2, fy=2, interpolation=cv2.INTER_CUBIC)
-                #         # Convert the frame to RGB
-                #         results = hands.process(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
+                #         success, image = cap.read()
+                #         if not success:
+                #             print("Ignoring empty camera frame.")
+                #         # If loading a video, use 'break' instead of 'continue'.
+                #             break   
 
-                #         # Create a black background image
-                #         black_background = np.zeros_like(frame)
-                #         # Read an image, flip it around y-axis for correct handedness output (see
-                #         if results.multi_hand_landmarks:
-                #             for hand_landmarks in results.multi_hand_landmarks:
-                #                 mp_drawing.draw_landmarks(
-                #                     black_background,
-                #                     hand_landmarks,
-                #                     mp_hands.HAND_CONNECTIONS,
-                #                     mp_drawing_styles.get_default_hand_landmarks_style(),
-                #                     mp_drawing_styles.get_default_hand_connections_style())
-                #                     # if frame_number % 10 == 0:
-                #                     #     st.image(black_background, caption=f"Frame {frame_number}", use_column_width=True)
+                #         # To improve performance, optionally mark the image as not writeable to
+                #         # pass by reference.
+                #         black_background = np.zeros_like(image)
+
+                #         image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+                #         results = holistic.process(image)
+
+                #         # mp_drawing.draw_landmarks(
+                #         #     black_background,
+                #         #     results.face_landmarks,
+                #         #     mp_holistic.FACEMESH_CONTOURS,
+                #         #     landmark_drawing_spec=None,
+                #         #     connection_drawing_spec=mp_drawing_styles
+                #         #     .get_default_face_mesh_contours_style())
+                #         mp_drawing.draw_landmarks(
+                #             black_background,
+                #             results.pose_landmarks,
+                #             mp_holistic.POSE_CONNECTIONS,
+                #             landmark_drawing_spec=mp_drawing_styles
+                #             .get_default_pose_landmarks_style())
+                #         # Flip the image horizontally for a selfie-view display.
                 #         image_path = os.path.join(tmp_dir, f'frame_{frame_number}.png')
                 #         cv2.imwrite(image_path, black_background)
+                with mp_hands.Hands(
+                    min_detection_confidence=0.5,
+                    min_tracking_confidence=0.5) as hands:
+                    while cap.isOpened():
+                        
+                        ret, frame = cap.read()
+                        if not ret:
+                            break
+                        # frame = cv2.resize(frame, None, fx=2, fy=2, interpolation=cv2.INTER_CUBIC)
+                        # Convert the frame to RGB
+                        results = hands.process(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
+
+                        # Create a black background image
+                        black_background = np.zeros_like(frame)
+                        # Read an image, flip it around y-axis for correct handedness output (see
+                        if results.multi_hand_landmarks:
+                            for hand_landmarks in results.multi_hand_landmarks:
+                                mp_drawing.draw_landmarks(
+                                    black_background,
+                                    hand_landmarks,
+                                    mp_hands.HAND_CONNECTIONS,
+                                    mp_drawing_styles.get_default_hand_landmarks_style(),
+                                    mp_drawing_styles.get_default_hand_connections_style())
+                                    # if frame_number % 10 == 0:
+                                    #     st.image(black_background, caption=f"Frame {frame_number}", use_column_width=True)
+                        image_path = os.path.join(tmp_dir, f'frame_{frame_number}.png')
+                        cv2.imwrite(image_path, black_background)
                         
                         frame_number += 1
                         progress = frame_number / total_frames
