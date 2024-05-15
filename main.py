@@ -61,13 +61,14 @@ with col3:
     
                     while cap.isOpened():
                         ret, frame = cap.read()
+                        if not ret:
+                            break
                         black_background = np.zeros_like(frame)
                         # Recolor Feed
-                        image = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+                        frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
                         # Make Detections
-                        results = holistic.process(image)
+                        results = holistic.process(frame)
                         # print(results.face_landmarks)
-                        
                         # face_landmarks, pose_landmarks, left_hand_landmarks, right_hand_landmarks
                         
                         # Recolor image back to BGR for rendering
