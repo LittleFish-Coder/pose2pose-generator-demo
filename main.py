@@ -57,6 +57,35 @@ with col3:
                 mp_holistic = mp.solutions.holistic             # mediapipe 全身偵測方法
                 mp_hands = mp.solutions.hands
 
+                with mp_holistic.Holistic(min_detection_confidence=0.5, min_tracking_confidence=0.5) as holistic:
+    
+                    while cap.isOpened():
+                        ret, frame = cap.read()
+                        black_background = np.zeros_like(frame)
+                        # Recolor Feed
+                        image = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+                        # Make Detections
+                        results = holistic.process(image)
+                        # print(results.face_landmarks)
+                        
+                        # face_landmarks, pose_landmarks, left_hand_landmarks, right_hand_landmarks
+                        
+                        # Recolor image back to BGR for rendering
+                        # image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
+                        
+                        # Draw face landmarks
+                        # mp_drawing.draw_landmarks(image, results.face_landmarks, mp_holistic.FACE_CONNECTIONS)
+                        
+                        # Right hand
+                        mp_drawing.draw_landmarks(black_background, results.right_hand_landmarks, mp_holistic.HAND_CONNECTIONS)
+
+                        # Left Hand
+                        mp_drawing.draw_landmarks(black_background, results.left_hand_landmarks, mp_holistic.HAND_CONNECTIONS)
+
+                        # Pose Detections
+                        mp_drawing.draw_landmarks(black_background, results.pose_landmarks, mp_holistic.POSE_CONNECTIONS)
+                        image_path = os.path.join(tmp_dir, f'frame_{frame_number}.png')
+                        cv2.imwrite(image_path, black_background)
                 # with mp_holistic.Holistic(
                 #     min_detection_confidence=0.5,
                 #     min_tracking_confidence=0.5) as holistic:
@@ -90,33 +119,34 @@ with col3:
                 #         # Flip the image horizontally for a selfie-view display.
                 #         image_path = os.path.join(tmp_dir, f'frame_{frame_number}.png')
                 #         cv2.imwrite(image_path, black_background)
-                with mp_hands.Hands(
-                    min_detection_confidence=0.7,
-                    min_tracking_confidence=0.7) as hands:
-                    while cap.isOpened():
+                
+                # with mp_hands.Hands(
+                #     min_detection_confidence=0.7,
+                #     min_tracking_confidence=0.7) as hands:
+                #     while cap.isOpened():
                         
-                        ret, frame = cap.read()
-                        if not ret:
-                            break
-                        # frame = cv2.resize(frame, None, fx=2, fy=2, interpolation=cv2.INTER_CUBIC)
-                        # Convert the frame to RGB
-                        results = hands.process(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
+                #         ret, frame = cap.read()
+                #         if not ret:
+                #             break
+                #         # frame = cv2.resize(frame, None, fx=2, fy=2, interpolation=cv2.INTER_CUBIC)
+                #         # Convert the frame to RGB
+                #         results = hands.process(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
 
-                        # Create a black background image
-                        black_background = np.zeros_like(frame)
-                        # Read an image, flip it around y-axis for correct handedness output (see
-                        if results.multi_hand_landmarks:
-                            for hand_landmarks in results.multi_hand_landmarks:
-                                mp_drawing.draw_landmarks(
-                                    black_background,
-                                    hand_landmarks,
-                                    mp_hands.HAND_CONNECTIONS,
-                                    mp_drawing_styles.get_default_hand_landmarks_style(),
-                                    mp_drawing_styles.get_default_hand_connections_style())
-                                    # if frame_number % 10 == 0:
-                                    #     st.image(black_background, caption=f"Frame {frame_number}", use_column_width=True)
-                        image_path = os.path.join(tmp_dir, f'frame_{frame_number}.png')
-                        cv2.imwrite(image_path, black_background)
+                #         # Create a black background image
+                #         black_background = np.zeros_like(frame)
+                #         # Read an image, flip it around y-axis for correct handedness output (see
+                #         if results.multi_hand_landmarks:
+                #             for hand_landmarks in results.multi_hand_landmarks:
+                #                 mp_drawing.draw_landmarks(
+                #                     black_background,
+                #                     hand_landmarks,
+                #                     mp_hands.HAND_CONNECTIONS,
+                #                     mp_drawing_styles.get_default_hand_landmarks_style(),
+                #                     mp_drawing_styles.get_default_hand_connections_style())
+                #                     # if frame_number % 10 == 0:
+                #                     #     st.image(black_background, caption=f"Frame {frame_number}", use_column_width=True)
+                #         image_path = os.path.join(tmp_dir, f'frame_{frame_number}.png')
+                #         cv2.imwrite(image_path, black_background)
                         
                         frame_number += 1
                         progress = frame_number / total_frames
