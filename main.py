@@ -61,8 +61,8 @@ with col3:
                 with mp_hands.Hands(
                     model_complexity=0,
                     # max_num_hands=1,
-                    min_detection_confidence=0.5,
-                    min_tracking_confidence=0.5) as hands:
+                    min_detection_confidence=0.1,
+                    min_tracking_confidence=0.1) as hands:
                     while cap.isOpened():
                     
                         ret, frame = cap.read()
