@@ -7,13 +7,14 @@ from natsort import natsorted
 import tempfile
 import io
 import av
+
 st.set_page_config(layout="wide")
 st.title("YYDS影片生成器")
 # set wide mode
 col1, col2, col3 = st.columns([3, 1, 3],gap='large')
 
 with col1:
-# 輸入影片
+    # 輸入影片
     uploaded_file = st.file_uploader("選擇一個影片檔", type=['mp4', 'avi', 'mov'])
     if uploaded_file is not None:
         with tempfile.NamedTemporaryFile(delete=False) as tmp_file:
@@ -32,26 +33,16 @@ with col3:
                     tmp_file.write(uploaded_file.getvalue())
                     tmp_file_path = tmp_file.name
 
-                # Initialize MediaPipe Pose and Drawing utilities
-                mp_pose = mp.solutions.pose
-                mp_drawing = mp.solutions.drawing_utils
-                pose = mp_pose.Pose()
-                mp_drawing_styles = mp.solutions.drawing_styles
+                # Initialize MediaPipe Holistic and Drawing utilities
+                mp_drawing = mp.solutions.drawing_utils  # mediapipe 繪圖方法
+                mp_drawing_styles = mp.solutions.drawing_styles  # mediapipe 繪圖樣式
+                mp_holistic = mp.solutions.holistic  # mediapipe 全身偵測方法
+                holistic = mp_holistic.Holistic(min_detection_confidence=0.5, min_tracking_confidence=0.5)
 
                 # Open the video file
                 cap = cv2.VideoCapture(tmp_file_path)
                 total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
                 progress_bar = st.progress(0)  # 初始化進度條
-
-                # Initialize an empty frame and black background image
-                ret, frame = cap.read()
-                if ret:
-                    frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-                    black_background = np.zeros_like(frame_rgb)
-                else:
-                    print("Failed to read the first frame from the video file.")
-                    cap.release()
-                    exit()
 
                 frame_number = 0
 
@@ -63,21 +54,19 @@ with col3:
                     # Convert the frame to RGB
                     frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
 
+                    # Process the frame with MediaPipe Holistic
+                    results = holistic.process(frame_rgb)
+
                     # Create a black background image
                     black_background = np.zeros_like(frame_rgb)
 
-                    # Process the frame with MediaPipe Pose
-                    result = pose.process(frame_rgb)
-
                     # Draw the pose landmarks on the black background
-                    if result.pose_landmarks:
-                        mp_drawing.draw_landmarks(black_background, result.pose_landmarks, mp_pose.POSE_CONNECTIONS, landmark_drawing_spec=mp_drawing_styles.get_default_pose_landmarks_style())
+                    if results.pose_landmarks:
+                        mp_drawing.draw_landmarks(black_background, results.pose_landmarks, mp_holistic.POSE_CONNECTIONS, landmark_drawing_spec=mp_drawing_styles.get_default_pose_landmarks_style())
 
                     image_path = os.path.join(tmp_dir, f'frame_{frame_number}.png')
                     cv2.imwrite(image_path, black_background)
 
-                    # if frame_number % 10 == 0:
-                    #     st.image(black_background, caption=f"Frame {frame_number}", use_column_width=True)
                     frame_number += 1
                     progress = frame_number / total_frames
                     progress_bar.progress(progress)
@@ -108,7 +97,6 @@ with col3:
                     print("pose_estimation完成")
                     output_memory_file.seek(0)
                     st.session_state.processed_video1 = output_memory_file
-                    # video_placeholder.video(output_memory_file, format='video/mp4')
                     progress = frame_number / frame_number
                     progress_bar.progress(progress)
                     if 'processed_video1' in st.session_state:
@@ -116,10 +104,3 @@ with col3:
                     
                 else:
                     st.warning("未能讀取視頻幀")
-
-
-# generate_button = st.button("generate", key="generate")
-# if generate_button and uploaded_file is not None:
-#     st.session_state.processed_video2 = GAN_model(uploaded_file)
-# if 'processed_video2' in st.session_state:
-#     st.video(st.session_state.processed_video2)
