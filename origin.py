@@ -54,66 +54,33 @@ with col3:
                     exit()
 
                 frame_number = 0
-                mp_holistic = mp.solutions.holistic             # mediapipe 全身偵測方法
-                mp_hands = mp.solutions.hands
 
-                with mp_holistic.Holistic(min_detection_confidence=0.8, min_tracking_confidence=0.8) as holistic:
-    
-                    while cap.isOpened():
-                        ret, frame = cap.read()
-                        if not ret:
-                            break
-                        black_background = np.zeros_like(frame)
-                        # Recolor Feed
-                        frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-                        # Make Detections
-                        results = holistic.process(frame)
-                        
-                        # Draw face landmarks
-                        # mp_drawing.draw_landmarks(image, results.face_landmarks, mp_holistic.FACE_CONNECTIONS)
-                        
-                        # Right hand
-                        mp_drawing.draw_landmarks(black_background, results.right_hand_landmarks, mp_holistic.HAND_CONNECTIONS)
+                while cap.isOpened():
+                    ret, frame = cap.read()
+                    if not ret:
+                        break
 
-                        # Left Hand
-                        mp_drawing.draw_landmarks(black_background, results.left_hand_landmarks, mp_holistic.HAND_CONNECTIONS)
+                    # Convert the frame to RGB
+                    frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
 
-                        # Pose Detections
-                        mp_drawing.draw_landmarks(black_background, results.pose_landmarks, mp_holistic.POSE_CONNECTIONS)
-                        image_path = os.path.join(tmp_dir, f'frame_{frame_number}.png')
-                        cv2.imwrite(image_path, black_background)
-                
-                        frame_number += 1
-                        progress = frame_number / total_frames
-                        progress_bar.progress(progress)
-                    
-                # while cap.isOpened():
-                    
-                #     ret, frame = cap.read()
-                #     if not ret:
-                #         break
+                    # Create a black background image
+                    black_background = np.zeros_like(frame_rgb)
 
-                #     # Convert the frame to RGB
-                #     frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+                    # Process the frame with MediaPipe Pose
+                    result = pose.process(frame_rgb)
 
-                #     # Create a black background image
-                #     black_background = np.zeros_like(frame_rgb)
+                    # Draw the pose landmarks on the black background
+                    if result.pose_landmarks:
+                        mp_drawing.draw_landmarks(black_background, result.pose_landmarks, mp_pose.POSE_CONNECTIONS, landmark_drawing_spec=mp_drawing_styles.get_default_pose_landmarks_style())
 
-                #     # Process the frame with MediaPipe Pose
-                #     result = pose.process(frame_rgb)
+                    image_path = os.path.join(tmp_dir, f'frame_{frame_number}.png')
+                    cv2.imwrite(image_path, black_background)
 
-                #     # Draw the pose landmarks on the black background
-                #     if result.pose_landmarks:
-                #         mp_drawing.draw_landmarks(black_background, result.pose_landmarks, mp_pose.POSE_CONNECTIONS, landmark_drawing_spec=mp_drawing_styles.get_default_pose_landmarks_style())
-    
-                #     image_path = os.path.join(tmp_dir, f'frame_{frame_number}.png')
-                #     cv2.imwrite(image_path, black_background)
-
-                #     # if frame_number % 10 == 0:
-                #     #     st.image(black_background, caption=f"Frame {frame_number}", use_column_width=True)
-                #     frame_number += 1
-                #     progress = frame_number / total_frames
-                #     progress_bar.progress(progress)
+                    # if frame_number % 10 == 0:
+                    #     st.image(black_background, caption=f"Frame {frame_number}", use_column_width=True)
+                    frame_number += 1
+                    progress = frame_number / total_frames
+                    progress_bar.progress(progress)
 
                 cap.release()
                 video_placeholder = st.empty()
