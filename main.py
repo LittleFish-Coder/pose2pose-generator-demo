@@ -58,7 +58,7 @@ with col3:
                             break
 
                         # Convert the frame to RGB
-                        frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+                        frame_rgb = holistic.process(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
 
                         # Create a black background image
                         black_background = np.zeros_like(frame_rgb)
@@ -69,17 +69,16 @@ with col3:
                         mp_drawing.draw_landmarks(
                             black_background,
                             results.face_landmarks,
-                            mp_holistic.FACEMESH_CONTOURS,
+                            mp_holistic.FACEMESH_TESSELATION,
                             landmark_drawing_spec=None,
                             connection_drawing_spec=mp_drawing_styles
-                            .get_default_face_mesh_contours_style())
-                        # 身體偵測，繪製身體骨架
+                            .get_default_face_mesh_tesselation_style())
                         mp_drawing.draw_landmarks(
                             black_background,
                             results.pose_landmarks,
                             mp_holistic.POSE_CONNECTIONS,
-                            landmark_drawing_spec=mp_drawing_styles
-                            .get_default_pose_landmarks_style())
+                            landmark_drawing_spec=mp_drawing_styles.
+                            get_default_pose_landmarks_style())
                         image_path = os.path.join(tmp_dir, f'frame_{frame_number}.png')
                         cv2.imwrite(image_path, black_background)
 
