@@ -88,9 +88,9 @@ with col3:
                 #         image_path = os.path.join(tmp_dir, f'frame_{frame_number}.png')
                 #         cv2.imwrite(image_path, black_background)
                 with mp_hands.Hands(
-                    static_image_mode=True,
-                    max_num_hands=2,
-                    min_detection_confidence=0.5) as hands:
+                    model_complexity=0,
+                    min_detection_confidence=0.5,
+                    min_tracking_confidence=0.5) as hands:
                     while cap.isOpened():
                         
                         ret, frame = cap.read()
@@ -103,23 +103,19 @@ with col3:
                         # Create a black background image
                         black_background = np.zeros_like(frame)
                         # Read an image, flip it around y-axis for correct handedness output (see
-                        
-                        mp_drawing.draw_landmarks(
-                            black_background,
-                            results.hand_landmarks,
-                            mp_hands.HAND_CONNECTIONS,
-                            mp_drawing_styles.get_default_hand_landmarks_style(),
-                            mp_drawing_styles.get_default_hand_connections_style())
-                            # if frame_number % 10 == 0:
-                            #     st.image(black_background, caption=f"Frame {frame_number}", use_column_width=True)
+                        if results.multi_hand_landmarks:
+                            for hand_landmarks in results.multi_hand_landmarks:
+                                mp_drawing.draw_landmarks(
+                                    black_background,
+                                    hand_landmarks,
+                                    mp_hands.HAND_CONNECTIONS,
+                                    mp_drawing_styles.get_default_hand_landmarks_style(),
+                                    mp_drawing_styles.get_default_hand_connections_style())
+                                    # if frame_number % 10 == 0:
+                                    #     st.image(black_background, caption=f"Frame {frame_number}", use_column_width=True)
                         image_path = os.path.join(tmp_dir, f'frame_{frame_number}.png')
                         cv2.imwrite(image_path, black_background)
-                        # Draw hand world landmarks.
-                        if not results.multi_hand_world_landmarks:
-                            continue
-                        for hand_world_landmarks in results.multi_hand_world_landmarks:
-                            mp_drawing.plot_landmarks(
-                                hand_world_landmarks, mp_hands.HAND_CONNECTIONS, azimuth=5)
+                        
                         frame_number += 1
                         progress = frame_number / total_frames
                         progress_bar.progress(progress)
