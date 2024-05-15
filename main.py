@@ -38,7 +38,6 @@ with col3:
                 pose = mp_pose.Pose()
                 mp_drawing_styles = mp.solutions.drawing_styles
 
-                mp_hands = mp.solutions.hands                    # mediapipe 偵測手掌方法
                 # Open the video file
                 cap = cv2.VideoCapture(tmp_file_path)
                 total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
@@ -55,14 +54,11 @@ with col3:
                     exit()
 
                 frame_number = 0
-
-
-
-                with mp_hands.Hands(
-                    model_complexity=0,
-                    # max_num_hands=1,
+                mp_holistic = mp.solutions.holistic             # mediapipe 全身偵測方法
+                # mediapipe 啟用偵測全身
+                with mp_holistic.Holistic(
                     min_detection_confidence=0.1,
-                    min_tracking_confidence=0.1) as hands:
+                    min_tracking_confidence=0.1) as holistic:
                     while cap.isOpened():
                     
                         ret, frame = cap.read()
@@ -71,25 +67,23 @@ with col3:
 
                         # Convert the frame to RGB
                         frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-                        
+
                         # Create a black background image
                         black_background = np.zeros_like(frame_rgb)
 
                         # Process the frame with MediaPipe Pose
-                        result_pose = pose.process(frame_rgb)
-                        results_hand = hands.process(frame_rgb)                 # 偵測手掌
+                        # results = pose.process(frame_rgb)
+                        result = holistic.process(frame_rgb)              # 開始偵測全身
                         # Draw the pose landmarks on the black background
-                        if result_pose.pose_landmarks:
-                            mp_drawing.draw_landmarks(black_background, result_pose.pose_landmarks, mp_pose.POSE_CONNECTIONS, landmark_drawing_spec=mp_drawing_styles.get_default_pose_landmarks_style())
-                        if results_hand.multi_hand_landmarks:
-                            for hand_landmarks in results_hand.multi_hand_landmarks:
-                                # 將節點和骨架繪製到影像中
-                                mp_drawing.draw_landmarks(
-                                    black_background,
-                                    hand_landmarks,
-                                    mp_hands.HAND_CONNECTIONS,
-                                    mp_drawing_styles.get_default_hand_landmarks_style(),
-                                    mp_drawing_styles.get_default_hand_connections_style())
+                        if result.pose_landmarks:
+                            mp_drawing.draw_landmarks(black_background, result.pose_landmarks, mp_pose.POSE_CONNECTIONS, landmark_drawing_spec=mp_drawing_styles.get_default_pose_landmarks_style())
+                         # 身體偵測，繪製身體骨架
+                        mp_drawing.draw_landmarks(
+                            black_background,
+                            result.pose_landmarks,
+                            mp_holistic.POSE_CONNECTIONS,
+                            landmark_drawing_spec=mp_drawing_styles
+                            .get_default_pose_landmarks_style())
                         image_path = os.path.join(tmp_dir, f'frame_{frame_number}.png')
                         cv2.imwrite(image_path, black_background)
 
@@ -99,8 +93,6 @@ with col3:
                         progress = frame_number / total_frames
                         progress_bar.progress(progress)
                     
-                        
-                        
                 # while cap.isOpened():
                     
                 #     ret, frame = cap.read()
@@ -119,7 +111,7 @@ with col3:
                 #     # Draw the pose landmarks on the black background
                 #     if result.pose_landmarks:
                 #         mp_drawing.draw_landmarks(black_background, result.pose_landmarks, mp_pose.POSE_CONNECTIONS, landmark_drawing_spec=mp_drawing_styles.get_default_pose_landmarks_style())
-                    
+    
                 #     image_path = os.path.join(tmp_dir, f'frame_{frame_number}.png')
                 #     cv2.imwrite(image_path, black_background)
 
