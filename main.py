@@ -91,8 +91,8 @@ with col3:
                 #         image_path = os.path.join(tmp_dir, f'frame_{frame_number}.png')
                 #         cv2.imwrite(image_path, black_background)
                 with mp_hands.Hands(
-                    min_detection_confidence=0.5,
-                    min_tracking_confidence=0.5) as hands:
+                    min_detection_confidence=0.7,
+                    min_tracking_confidence=0.7) as hands:
                     while cap.isOpened():
                         
                         ret, frame = cap.read()
