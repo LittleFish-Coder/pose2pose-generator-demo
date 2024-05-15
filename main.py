@@ -98,10 +98,10 @@ with col3:
                             break
 
                         # Convert the frame to RGB
-                        results = hands.process(cv2.cvtColor(frame_rgb, cv2.COLOR_BGR2RGB))
+                        results = hands.process(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
 
                         # Create a black background image
-                        black_background = np.zeros_like(frame_rgb)
+                        black_background = np.zeros_like(frame)
                         # Read an image, flip it around y-axis for correct handedness output (see
                         for hand_landmarks in results.multi_hand_landmarks:
                             mp_drawing.draw_landmarks(
