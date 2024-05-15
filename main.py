@@ -74,13 +74,13 @@ with col3:
                         image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
                         results = holistic.process(image)
 
-                        mp_drawing.draw_landmarks(
-                            black_background,
-                            results.face_landmarks,
-                            mp_holistic.FACEMESH_CONTOURS,
-                            landmark_drawing_spec=None,
-                            connection_drawing_spec=mp_drawing_styles
-                            .get_default_face_mesh_contours_style())
+                        # mp_drawing.draw_landmarks(
+                        #     black_background,
+                        #     results.face_landmarks,
+                        #     mp_holistic.FACEMESH_CONTOURS,
+                        #     landmark_drawing_spec=None,
+                        #     connection_drawing_spec=mp_drawing_styles
+                        #     .get_default_face_mesh_contours_style())
                         mp_drawing.draw_landmarks(
                             black_background,
                             results.pose_landmarks,
