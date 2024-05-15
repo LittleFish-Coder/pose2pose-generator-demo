@@ -13,14 +13,20 @@ st.title("YYDS影片生成器")
 col1, col2, col3 = st.columns([3, 1, 3],gap='large')
 
 with col1:
-    show_uploader = st.checkbox("顯示影片上傳區塊")
+    # 初始化上傳檔案區塊
+    show_uploader = True
+    uploaded_file = None
+    
     if show_uploader:
-# 輸入影片
+        # 顯示上傳影片區塊
         uploaded_file = st.file_uploader("選擇一個影片檔", type=['mp4', 'avi', 'mov'])
-        if uploaded_file is not None:
-            with tempfile.NamedTemporaryFile(delete=False) as tmp_file:
-                tmp_file.write(uploaded_file.getvalue())
-                st.video(uploaded_file)
+        
+    # 如果已上傳影片,顯示影片並隱藏上傳區塊
+    if uploaded_file is not None:
+        with tempfile.NamedTemporaryFile(delete=False) as tmp_file:
+            tmp_file.write(uploaded_file.getvalue())
+            st.video(uploaded_file)
+        show_uploader = False
 with col2:
     st.write('')
     inference_button = st.button('Inference')
