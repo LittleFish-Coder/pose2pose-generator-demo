@@ -7,14 +7,13 @@ from natsort import natsorted
 import tempfile
 import io
 import av
-
 st.set_page_config(layout="wide")
 st.title("YYDS影片生成器")
 # set wide mode
 col1, col2, col3 = st.columns([3, 1, 3],gap='large')
 
 with col1:
-    # 輸入影片
+# 輸入影片
     uploaded_file = st.file_uploader("選擇一個影片檔", type=['mp4', 'avi', 'mov'])
     if uploaded_file is not None:
         with tempfile.NamedTemporaryFile(delete=False) as tmp_file:
@@ -33,60 +32,104 @@ with col3:
                     tmp_file.write(uploaded_file.getvalue())
                     tmp_file_path = tmp_file.name
 
-                # Initialize MediaPipe Holistic and Drawing utilities
-                # mp_drawing = mp.solutions.drawing_utils  # mediapipe 繪圖方法
-                # mp_drawing_styles = mp.solutions.drawing_styles  # mediapipe 繪圖樣式
-                # mp_holistic = mp.solutions.holistic  # mediapipe 全身偵測方法
-                # holistic = mp_holistic.Holistic(min_detection_confidence=0.5, min_tracking_confidence=0.5)
-                mp_drawing = mp.solutions.drawing_utils         # mediapipe 繪圖方法
-                mp_drawing_styles = mp.solutions.drawing_styles # mediapipe 繪圖樣式
-                mp_holistic = mp.solutions.holistic             # mediapipe 全身偵測方法
+                # Initialize MediaPipe Pose and Drawing utilities
+                mp_pose = mp.solutions.pose
+                mp_drawing = mp.solutions.drawing_utils
+                pose = mp_pose.Pose()
+                mp_drawing_styles = mp.solutions.drawing_styles
 
+                mp_hands = mp.solutions.hands                    # mediapipe 偵測手掌方法
                 # Open the video file
                 cap = cv2.VideoCapture(tmp_file_path)
                 total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
                 progress_bar = st.progress(0)  # 初始化進度條
 
-                frame_number = 0
-                with mp_holistic.Holistic(
-                    min_detection_confidence=0.5,
-                    min_tracking_confidence=0.5) as holistic:
+                # Initialize an empty frame and black background image
+                ret, frame = cap.read()
+                if ret:
+                    frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+                    black_background = np.zeros_like(frame_rgb)
+                else:
+                    print("Failed to read the first frame from the video file.")
+                    cap.release()
+                    exit()
 
+                frame_number = 0
+
+
+
+                with mp_hands.Hands(
+                    model_complexity=0,
+                    # max_num_hands=1,
+                    min_detection_confidence=0.5,
+                    min_tracking_confidence=0.5) as hands:
                     while cap.isOpened():
+                    
                         ret, frame = cap.read()
                         if not ret:
                             break
 
                         # Convert the frame to RGB
-                        frame_rgb = holistic.process(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
-
+                        frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+                        
                         # Create a black background image
                         black_background = np.zeros_like(frame_rgb)
-                        # Process the frame with MediaPipe Holistic
-                        results = holistic.process(frame_rgb)
+
+                        # Process the frame with MediaPipe Pose
+                        result_pose = pose.process(frame_rgb)
+                        results_hand = hands.process(frame_rgb)                 # 偵測手掌
                         # Draw the pose landmarks on the black background
-                         # 面部偵測，繪製臉部網格
-                        mp_drawing.draw_landmarks(
-                            black_background,
-                            results.face_landmarks,
-                            mp_holistic.FACEMESH_TESSELATION,
-                            landmark_drawing_spec=None,
-                            connection_drawing_spec=mp_drawing_styles
-                            .get_default_face_mesh_tesselation_style())
-                        mp_drawing.draw_landmarks(
-                            black_background,
-                            results.pose_landmarks,
-                            mp_holistic.POSE_CONNECTIONS,
-                            landmark_drawing_spec=mp_drawing_styles.
-                            get_default_pose_landmarks_style())
+                        if result_pose.pose_landmarks:
+                            mp_drawing.draw_landmarks(black_background, result_pose.pose_landmarks, mp_pose.POSE_CONNECTIONS, landmark_drawing_spec=mp_drawing_styles.get_default_pose_landmarks_style())
+                        if results_hand.multi_hand_landmarks:
+                            for hand_landmarks in results_hand.multi_hand_landmarks:
+                                # 將節點和骨架繪製到影像中
+                                mp_drawing.draw_landmarks(
+                                    black_background,
+                                    hand_landmarks,
+                                    mp_hands.HAND_CONNECTIONS,
+                                    mp_drawing_styles.get_default_hand_landmarks_style(),
+                                    mp_drawing_styles.get_default_hand_connections_style())
                         image_path = os.path.join(tmp_dir, f'frame_{frame_number}.png')
                         cv2.imwrite(image_path, black_background)
 
+                        # if frame_number % 10 == 0:
+                        #     st.image(black_background, caption=f"Frame {frame_number}", use_column_width=True)
                         frame_number += 1
                         progress = frame_number / total_frames
                         progress_bar.progress(progress)
+                    
+                        
+                        
+                # while cap.isOpened():
+                    
+                #     ret, frame = cap.read()
+                #     if not ret:
+                #         break
 
-                    cap.release()
+                #     # Convert the frame to RGB
+                #     frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+
+                #     # Create a black background image
+                #     black_background = np.zeros_like(frame_rgb)
+
+                #     # Process the frame with MediaPipe Pose
+                #     result = pose.process(frame_rgb)
+
+                #     # Draw the pose landmarks on the black background
+                #     if result.pose_landmarks:
+                #         mp_drawing.draw_landmarks(black_background, result.pose_landmarks, mp_pose.POSE_CONNECTIONS, landmark_drawing_spec=mp_drawing_styles.get_default_pose_landmarks_style())
+                    
+                #     image_path = os.path.join(tmp_dir, f'frame_{frame_number}.png')
+                #     cv2.imwrite(image_path, black_background)
+
+                #     # if frame_number % 10 == 0:
+                #     #     st.image(black_background, caption=f"Frame {frame_number}", use_column_width=True)
+                #     frame_number += 1
+                #     progress = frame_number / total_frames
+                #     progress_bar.progress(progress)
+
+                cap.release()
                 video_placeholder = st.empty()
                 # 檢查 frame_number 是否大於 0
                 if frame_number > 0:
@@ -112,6 +155,7 @@ with col3:
                     print("pose_estimation完成")
                     output_memory_file.seek(0)
                     st.session_state.processed_video1 = output_memory_file
+                    # video_placeholder.video(output_memory_file, format='video/mp4')
                     progress = frame_number / frame_number
                     progress_bar.progress(progress)
                     if 'processed_video1' in st.session_state:
@@ -119,3 +163,10 @@ with col3:
                     
                 else:
                     st.warning("未能讀取視頻幀")
+
+
+# generate_button = st.button("generate", key="generate")
+# if generate_button and uploaded_file is not None:
+#     st.session_state.processed_video2 = GAN_model(uploaded_file)
+# if 'processed_video2' in st.session_state:
+#     st.video(st.session_state.processed_video2)
