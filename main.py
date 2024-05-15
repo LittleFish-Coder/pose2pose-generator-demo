@@ -1,4 +1,3 @@
-
 import streamlit as st
 import cv2
 import mediapipe as mp
@@ -8,7 +7,6 @@ from natsort import natsorted
 import tempfile
 import io
 import av
-
 st.set_page_config(layout="wide")
 st.title("YYDS影片生成器")
 # set wide mode
@@ -39,8 +37,6 @@ with col3:
                 mp_drawing = mp.solutions.drawing_utils
                 pose = mp_pose.Pose()
                 mp_drawing_styles = mp.solutions.drawing_styles
-                # 0515
-                mp_holistic = mp.solutions.holistic
 
                 # Open the video file
                 cap = cv2.VideoCapture(tmp_file_path)
@@ -58,71 +54,35 @@ with col3:
                     exit()
 
                 frame_number = 0
-                # 0515
-                with mp_holistic.Holistic(
-                    min_detection_confidence=0.1,
-                    min_tracking_confidence=0.1) as holistic:
 
-                    if not cap.isOpened():
-                        print("Cannot open camera")
-                        exit()
-                    while True:
-                        ret, img = cap.read()
-                        if not ret:
-                            print("Cannot receive frame")
-                            break
-                        img = cv2.resize(img,(520,300))
-                        img2 = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)   # 將 BGR 轉換成 RGB
-                        results = holistic.process(img2)              # 開始偵測全身
-                        # 面部偵測，繪製臉部網格
-                        mp_drawing.draw_landmarks(
-                            img,
-                            results.face_landmarks,
-                            mp_holistic.FACEMESH_CONTOURS,
-                            landmark_drawing_spec=None,
-                            connection_drawing_spec=mp_drawing_styles
-                            .get_default_face_mesh_contours_style())
-                        # 身體偵測，繪製身體骨架
-                        mp_drawing.draw_landmarks(
-                            img,
-                            results.pose_landmarks,
-                            mp_holistic.POSE_CONNECTIONS,
-                            landmark_drawing_spec=mp_drawing_styles
-                            .get_default_pose_landmarks_style())
-                        image_path = os.path.join(tmp_dir, f'frame_{frame_number}.png')
-                        
-                        frame_number += 1
-                        progress = frame_number / total_frames
-                        progress_bar.progress(progress)
-                        cv2.imwrite(image_path, black_background)
-                # while cap.isOpened():
-                #     ret, frame = cap.read()
-                #     if not ret:
-                #         break
+                while cap.isOpened():
+                    ret, frame = cap.read()
+                    if not ret:
+                        break
 
-                #     # Convert the frame to RGB
-                #     frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+                    # Convert the frame to RGB
+                    frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
 
-                #     # Create a black background image
-                #     black_background = np.zeros_like(frame_rgb)
+                    # Create a black background image
+                    black_background = np.zeros_like(frame_rgb)
 
-                #     # Process the frame with MediaPipe Pose
-                #     result = pose.process(frame_rgb)
+                    # Process the frame with MediaPipe Pose
+                    result = pose.process(frame_rgb)
 
-                #     # Draw the pose landmarks on the black background
-                #     if result.pose_landmarks:
-                #         mp_drawing.draw_landmarks(black_background, result.pose_landmarks, mp_pose.POSE_CONNECTIONS, landmark_drawing_spec=mp_drawing_styles.get_default_pose_landmarks_style())
+                    # Draw the pose landmarks on the black background
+                    if result.pose_landmarks:
+                        mp_drawing.draw_landmarks(black_background, result.pose_landmarks, mp_pose.POSE_CONNECTIONS, landmark_drawing_spec=mp_drawing_styles.get_default_pose_landmarks_style())
 
-                #     image_path = os.path.join(tmp_dir, f'frame_{frame_number}.png')
-                #     cv2.imwrite(image_path, black_background)
+                    image_path = os.path.join(tmp_dir, f'frame_{frame_number}.png')
+                    cv2.imwrite(image_path, black_background)
 
-                #     # if frame_number % 10 == 0:
-                #     #     st.image(black_background, caption=f"Frame {frame_number}", use_column_width=True)
-                #     frame_number += 1
-                #     progress = frame_number / total_frames
-                #     progress_bar.progress(progress)
+                    # if frame_number % 10 == 0:
+                    #     st.image(black_background, caption=f"Frame {frame_number}", use_column_width=True)
+                    frame_number += 1
+                    progress = frame_number / total_frames
+                    progress_bar.progress(progress)
 
-                # cap.release()
+                cap.release()
                 video_placeholder = st.empty()
                 # 檢查 frame_number 是否大於 0
                 if frame_number > 0:
@@ -156,3 +116,10 @@ with col3:
                     
                 else:
                     st.warning("未能讀取視頻幀")
+
+
+# generate_button = st.button("generate", key="generate")
+# if generate_button and uploaded_file is not None:
+#     st.session_state.processed_video2 = GAN_model(uploaded_file)
+# if 'processed_video2' in st.session_state:
+#     st.video(st.session_state.processed_video2)
