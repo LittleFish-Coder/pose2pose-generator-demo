@@ -60,8 +60,8 @@ with col3:
                 frame_number = 0
                 # 0515
                 with mp_holistic.Holistic(
-                    min_detection_confidence=0.5,
-                    min_tracking_confidence=0.5) as holistic:
+                    min_detection_confidence=0.1,
+                    min_tracking_confidence=0.1) as holistic:
 
                     if not cap.isOpened():
                         print("Cannot open camera")
