@@ -34,10 +34,13 @@ with col3:
                     tmp_file_path = tmp_file.name
 
                 # Initialize MediaPipe Holistic and Drawing utilities
-                mp_drawing = mp.solutions.drawing_utils  # mediapipe 繪圖方法
-                mp_drawing_styles = mp.solutions.drawing_styles  # mediapipe 繪圖樣式
-                mp_holistic = mp.solutions.holistic  # mediapipe 全身偵測方法
-                holistic = mp_holistic.Holistic(min_detection_confidence=0.5, min_tracking_confidence=0.5)
+                # mp_drawing = mp.solutions.drawing_utils  # mediapipe 繪圖方法
+                # mp_drawing_styles = mp.solutions.drawing_styles  # mediapipe 繪圖樣式
+                # mp_holistic = mp.solutions.holistic  # mediapipe 全身偵測方法
+                # holistic = mp_holistic.Holistic(min_detection_confidence=0.5, min_tracking_confidence=0.5)
+                mp_drawing = mp.solutions.drawing_utils         # mediapipe 繪圖方法
+                mp_drawing_styles = mp.solutions.drawing_styles # mediapipe 繪圖樣式
+                mp_holistic = mp.solutions.holistic             # mediapipe 全身偵測方法
 
                 # Open the video file
                 cap = cv2.VideoCapture(tmp_file_path)
@@ -45,33 +48,46 @@ with col3:
                 progress_bar = st.progress(0)  # 初始化進度條
 
                 frame_number = 0
+                with mp_holistic.Holistic(
+                    min_detection_confidence=0.5,
+                    min_tracking_confidence=0.5) as holistic:
 
-                while cap.isOpened():
-                    ret, frame = cap.read()
-                    if not ret:
-                        break
+                    while cap.isOpened():
+                        ret, frame = cap.read()
+                        if not ret:
+                            break
 
-                    # Convert the frame to RGB
-                    frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+                        # Convert the frame to RGB
+                        frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
 
-                    # Process the frame with MediaPipe Holistic
-                    results = holistic.process(frame_rgb)
+                        # Create a black background image
+                        black_background = np.zeros_like(frame_rgb)
+                        # Process the frame with MediaPipe Holistic
+                        results = holistic.process(frame_rgb)
+                        # Draw the pose landmarks on the black background
+                         # 面部偵測，繪製臉部網格
+                        mp_drawing.draw_landmarks(
+                            black_background,
+                            results.face_landmarks,
+                            mp_holistic.FACEMESH_CONTOURS,
+                            landmark_drawing_spec=None,
+                            connection_drawing_spec=mp_drawing_styles
+                            .get_default_face_mesh_contours_style())
+                        # 身體偵測，繪製身體骨架
+                        mp_drawing.draw_landmarks(
+                            black_background,
+                            results.pose_landmarks,
+                            mp_holistic.POSE_CONNECTIONS,
+                            landmark_drawing_spec=mp_drawing_styles
+                            .get_default_pose_landmarks_style())
+                        image_path = os.path.join(tmp_dir, f'frame_{frame_number}.png')
+                        cv2.imwrite(image_path, black_background)
 
-                    # Create a black background image
-                    black_background = np.zeros_like(frame_rgb)
+                        frame_number += 1
+                        progress = frame_number / total_frames
+                        progress_bar.progress(progress)
 
-                    # Draw the pose landmarks on the black background
-                    if results.pose_landmarks:
-                        mp_drawing.draw_landmarks(black_background, results.pose_landmarks, mp_holistic.POSE_CONNECTIONS, landmark_drawing_spec=mp_drawing_styles.get_default_pose_landmarks_style())
-
-                    image_path = os.path.join(tmp_dir, f'frame_{frame_number}.png')
-                    cv2.imwrite(image_path, black_background)
-
-                    frame_number += 1
-                    progress = frame_number / total_frames
-                    progress_bar.progress(progress)
-
-                cap.release()
+                    cap.release()
                 video_placeholder = st.empty()
                 # 檢查 frame_number 是否大於 0
                 if frame_number > 0:
