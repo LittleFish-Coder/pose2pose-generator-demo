@@ -13,12 +13,14 @@ st.title("YYDS影片生成器")
 col1, col2, col3 = st.columns([3, 1, 3],gap='large')
 
 with col1:
+    show_uploader = st.checkbox("顯示影片上傳區塊")
+    if show_uploader:
 # 輸入影片
-    uploaded_file = st.file_uploader("選擇一個影片檔", type=['mp4', 'avi', 'mov'])
-    if uploaded_file is not None:
-        with tempfile.NamedTemporaryFile(delete=False) as tmp_file:
-            tmp_file.write(uploaded_file.getvalue())
-            st.video(uploaded_file)
+        uploaded_file = st.file_uploader("選擇一個影片檔", type=['mp4', 'avi', 'mov'])
+        if uploaded_file is not None:
+            with tempfile.NamedTemporaryFile(delete=False) as tmp_file:
+                tmp_file.write(uploaded_file.getvalue())
+                st.video(uploaded_file)
 with col2:
     st.write('')
     inference_button = st.button('Inference')
@@ -104,21 +106,15 @@ with col3:
                     packet = stream.encode(None)
                     output.mux(packet)
                     output.close()
-                    progress = frame_number / frame_number
-                    progress_bar.progress(progress)
+                    
                     print("pose_estimation完成")
                     output_memory_file.seek(0)
                     st.session_state.processed_video1 = output_memory_file
                     # video_placeholder.video(output_memory_file, format='video/mp4')
+                    progress = frame_number / frame_number
+                    progress_bar.progress(progress)
                     if 'processed_video1' in st.session_state:
                         video_placeholder.video(st.session_state.processed_video1,format='video/mp4')
                     
                 else:
                     st.warning("未能讀取視頻幀")
-
-
-# generate_button = st.button("generate", key="generate")
-# if generate_button and uploaded_file is not None:
-#     st.session_state.processed_video2 = GAN_model(uploaded_file)
-# if 'processed_video2' in st.session_state:
-#     st.video(st.session_state.processed_video2)
