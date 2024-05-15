@@ -55,40 +55,71 @@ with col3:
 
                 frame_number = 0
                 mp_holistic = mp.solutions.holistic             # mediapipe 全身偵測方法
+                mp_hands = mp.solutions.hands
                 # mediapipe 啟用偵測全身
-                with mp_holistic.Holistic(
-                    min_detection_confidence=0.1,
-                    min_tracking_confidence=0.1) as holistic:
-                    while cap.isOpened():
+                # with mp_holistic.Holistic(
+                #     min_detection_confidence=0.1,
+                #     min_tracking_confidence=0.1) as holistic:
+                #     while cap.isOpened():
                     
+                #         ret, frame = cap.read()
+                #         if not ret:
+                #             break
+
+                #         # Convert the frame to RGB
+                #         frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+
+                #         # Create a black background image
+                #         black_background = np.zeros_like(frame_rgb)
+
+                #         # Process the frame with MediaPipe Pose
+                #         # results = pose.process(frame_rgb)
+                #         result = holistic.process(frame_rgb)              # 開始偵測全身
+                #         # Draw the pose landmarks on the black background
+                #         if result.pose_landmarks:
+                #             mp_drawing.draw_landmarks(black_background, result.pose_landmarks, mp_pose.POSE_CONNECTIONS, landmark_drawing_spec=mp_drawing_styles.get_default_pose_landmarks_style())
+                #          # 身體偵測，繪製身體骨架
+                #         mp_drawing.draw_landmarks(
+                #             black_background,
+                #             result.pose_landmarks,
+                #             mp_holistic.POSE_CONNECTIONS,
+                #             landmark_drawing_spec=mp_drawing_styles
+                #             .get_default_pose_landmarks_style())
+                #         image_path = os.path.join(tmp_dir, f'frame_{frame_number}.png')
+                #         cv2.imwrite(image_path, black_background)
+                with mp_hands.Hands(
+                    static_image_mode=True,
+                    max_num_hands=2,
+                    min_detection_confidence=0.5) as hands:
+                    while cap.isOpened():
+                        
                         ret, frame = cap.read()
                         if not ret:
                             break
 
                         # Convert the frame to RGB
-                        frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+                        results = hands.process(cv2.cvtColor(frame_rgb, cv2.COLOR_BGR2RGB))
 
                         # Create a black background image
                         black_background = np.zeros_like(frame_rgb)
-
-                        # Process the frame with MediaPipe Pose
-                        # results = pose.process(frame_rgb)
-                        result = holistic.process(frame_rgb)              # 開始偵測全身
-                        # Draw the pose landmarks on the black background
-                        if result.pose_landmarks:
-                            mp_drawing.draw_landmarks(black_background, result.pose_landmarks, mp_pose.POSE_CONNECTIONS, landmark_drawing_spec=mp_drawing_styles.get_default_pose_landmarks_style())
-                         # 身體偵測，繪製身體骨架
-                        mp_drawing.draw_landmarks(
-                            black_background,
-                            result.pose_landmarks,
-                            mp_holistic.POSE_CONNECTIONS,
-                            landmark_drawing_spec=mp_drawing_styles
-                            .get_default_pose_landmarks_style())
+                        # Read an image, flip it around y-axis for correct handedness output (see
+                        for hand_landmarks in results.multi_hand_landmarks:
+                            mp_drawing.draw_landmarks(
+                                black_background,
+                                hand_landmarks,
+                                mp_hands.HAND_CONNECTIONS,
+                                mp_drawing_styles.get_default_hand_landmarks_style(),
+                                mp_drawing_styles.get_default_hand_connections_style())
+                                # if frame_number % 10 == 0:
+                                #     st.image(black_background, caption=f"Frame {frame_number}", use_column_width=True)
                         image_path = os.path.join(tmp_dir, f'frame_{frame_number}.png')
                         cv2.imwrite(image_path, black_background)
-
-                        # if frame_number % 10 == 0:
-                        #     st.image(black_background, caption=f"Frame {frame_number}", use_column_width=True)
+                        # Draw hand world landmarks.
+                        if not results.multi_hand_world_landmarks:
+                            continue
+                        for hand_world_landmarks in results.multi_hand_world_landmarks:
+                            mp_drawing.plot_landmarks(
+                                hand_world_landmarks, mp_hands.HAND_CONNECTIONS, azimuth=5)
                         frame_number += 1
                         progress = frame_number / total_frames
                         progress_bar.progress(progress)
