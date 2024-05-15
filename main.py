@@ -83,10 +83,6 @@ with col3:
                     progress_bar.progress(progress)
 
                 cap.release()
-                progress = frame_number / frame_number
-                progress_bar.progress(progress)
-                print("pose_estimation完成")
-                
                 video_placeholder = st.empty()
                 # 檢查 frame_number 是否大於 0
                 if frame_number > 0:
@@ -108,6 +104,9 @@ with col3:
                     packet = stream.encode(None)
                     output.mux(packet)
                     output.close()
+                    progress = frame_number / frame_number
+                    progress_bar.progress(progress)
+                    print("pose_estimation完成")
                     output_memory_file.seek(0)
                     st.session_state.processed_video1 = output_memory_file
                     # video_placeholder.video(output_memory_file, format='video/mp4')
