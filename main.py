@@ -96,7 +96,7 @@ with col3:
                         ret, frame = cap.read()
                         if not ret:
                             break
-
+                        frame = cv2.resize(frame, None, fx=2, fy=2, interpolation=cv2.INTER_CUBIC)
                         # Convert the frame to RGB
                         results = hands.process(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
 
