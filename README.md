@@ -1,2 +1,2 @@
-# deployment on streamlit
+# Deploy on streamlit
 https://yydspose.streamlit.app/
