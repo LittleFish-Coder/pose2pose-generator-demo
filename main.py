@@ -57,8 +57,8 @@ with col3:
                 mp_holistic = mp.solutions.holistic             # mediapipe 全身偵測方法
                 mp_hands = mp.solutions.hands
                 # 自定義手部landmark的顏色和粗細
-                left_hand_landmark_style = mp_drawing.DrawingSpec(color=(240,145,24), thickness=2)
-                right_hand_landmark_style = mp_drawing.DrawingSpec(color=(60,180,205),thickness=2)
+                left_hand_landmark_style = mp_drawing.DrawingSpec(color=(0,196,235), thickness=2)
+                right_hand_landmark_style = mp_drawing.DrawingSpec(color=(255,142,0),thickness=2)
                 with mp_holistic.Holistic(min_detection_confidence=0.8, min_tracking_confidence=0.8) as holistic:
     
                     while cap.isOpened():
