@@ -57,7 +57,7 @@ with col3:
                 mp_holistic = mp.solutions.holistic             # mediapipe 全身偵測方法
                 mp_hands = mp.solutions.hands
 
-                with mp_holistic.Holistic(min_detection_confidence=0.6, min_tracking_confidence=0.6) as holistic:
+                with mp_holistic.Holistic(min_detection_confidence=0.4, min_tracking_confidence=0.4) as holistic:
     
                     while cap.isOpened():
                         ret, frame = cap.read()
