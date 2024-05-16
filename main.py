@@ -56,8 +56,9 @@ with col3:
                 frame_number = 0
                 mp_holistic = mp.solutions.holistic             # mediapipe 全身偵測方法
                 mp_hands = mp.solutions.hands
-
-                with mp_holistic.Holistic(min_detection_confidence=0.6, min_tracking_confidence=0.6) as holistic:
+                # 自定義手部landmark的顏色和粗細
+                hand_landmark_style = mp_drawing.DrawingSpec(color=(0,255,0), thickness=2)
+                with mp_holistic.Holistic(min_detection_confidence=0.7, min_tracking_confidence=0.7) as holistic:
     
                     while cap.isOpened():
                         ret, frame = cap.read()
@@ -73,10 +74,10 @@ with col3:
                         # mp_drawing.draw_landmarks(image, results.face_landmarks, mp_holistic.FACE_CONNECTIONS)
                         
                         # Right hand
-                        mp_drawing.draw_landmarks(black_background, results.right_hand_landmarks, mp_holistic.HAND_CONNECTIONS)
+                        mp_drawing.draw_landmarks(black_background, results.right_hand_landmarks, mp_holistic.HAND_CONNECTIONS,landmark_drawing_spec=hand_landmark_style)
 
                         # Left Hand
-                        mp_drawing.draw_landmarks(black_background, results.left_hand_landmarks, mp_holistic.HAND_CONNECTIONS)
+                        mp_drawing.draw_landmarks(black_background, results.left_hand_landmarks, mp_holistic.HAND_CONNECTIONS,landmark_drawing_spec=hand_landmark_style)
 
                         # Pose Detections
                         mp_drawing.draw_landmarks(black_background, results.pose_landmarks, mp_holistic.POSE_CONNECTIONS,landmark_drawing_spec=mp_drawing_styles.get_default_pose_landmarks_style())
