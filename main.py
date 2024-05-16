@@ -59,7 +59,7 @@ with col3:
                 # 自定義手部landmark的顏色和粗細
                 left_hand_landmark_style = mp_drawing.DrawingSpec(color=(0,196,235), thickness=2)
                 right_hand_landmark_style = mp_drawing.DrawingSpec(color=(255,142,0),thickness=2)
-                with mp_holistic.Holistic(min_detection_confidence=0.8, min_tracking_confidence=0.8) as holistic:
+                with mp_holistic.Holistic(min_detection_confidence=0.5, min_tracking_confidence=0.5) as holistic:
     
                     while cap.isOpened():
                         ret, frame = cap.read()
