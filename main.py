@@ -29,7 +29,7 @@ if uploaded_file is not None:
         video = av.open(tmp_file_path)
         audio_stream = next((stream for stream in video.streams if stream.type == 'audio'), None)
         if audio_stream is not None:
-            audio_frames = audio_stream.decode(video=0)
+            audio_frames = [frame for packet in audio_stream.demux()]
         else:
             audio_frames = None
 
@@ -100,7 +100,7 @@ if uploaded_file is not None:
             stream.pix_fmt = 'yuv420p'
 
             if audio_frames is not None:
-                audio_stream = output.add_stream('aac')
+                audio_stream = output.add_stream(audio_frames[0].codec_name)
 
             for image_path in image_paths:
                 frame = cv2.imread(image_path)
@@ -110,14 +110,13 @@ if uploaded_file is not None:
                 output.mux(packet)
 
                 if audio_frames is not None:
-                    for audio_frame in audio_frames:
-                        audio_frames.send(None)
-                        packet = audio_stream.encode(audio_frame)
-                        output.mux(packet)
+                    for frame in audio_frames:
+                        output.mux(frame)
 
             packet = stream.encode(None)
             output.mux(packet)
             output.close()
+
             st.session_state.processed_video1 = output_memory_file
             progress_bar.progress(1.0, text="Processing complete!")
 
