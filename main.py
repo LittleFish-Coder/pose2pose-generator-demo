@@ -13,7 +13,7 @@ st.title("YYDS影片生成器")
 
 # Uploader 放置在標題下方並置中
 uploaded_file = st.file_uploader("選擇一個影片檔", type=['mp4', 'avi', 'mov'], label_visibility="collapsed")
-
+progress_container = st.container()
 if uploaded_file is not None:
     col1, col2 = st.columns(2)
 
@@ -53,7 +53,7 @@ if uploaded_file is not None:
         right_hand_landmark_style = mp_drawing.DrawingSpec(color=(255, 142, 0), thickness=2)
 
         with mp_holistic.Holistic(min_detection_confidence=0.1, min_tracking_confidence=0.1) as holistic:
-            progress_container = st.container()
+            
             progress_text = "Operation in progress. Please wait."
             progress_bar = progress_container.progress(0, text=progress_text)
 
