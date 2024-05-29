@@ -1,4 +1,5 @@
 mediapipe
 natsort
 av
+moviepy
 # pymongo
