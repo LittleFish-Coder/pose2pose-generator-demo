@@ -6,7 +6,8 @@ import os
 from natsort import natsorted
 import tempfile
 import io
-from moviepy.editor import VideoFileClip, AudioFileClip, ImageSequenceClip
+import av
+from moviepy.editor import VideoFileClip, AudioFileClip, CompositeVideoClip
 
 st.set_page_config(layout="wide")
 st.title("YYDS影片生成器")
@@ -24,12 +25,6 @@ if uploaded_file is not None:
         with tempfile.NamedTemporaryFile(delete=False, suffix=".mp4") as tmp_file:
             tmp_file.write(uploaded_file.getvalue())
             tmp_file_path = tmp_file.name
-
-        # 提取原始影片音訊
-        original_video = VideoFileClip(tmp_file_path)
-        audio = original_video.audio
-        audio_path = os.path.join(tmp_dir, "original_audio.aac")
-        audio.write_audiofile(audio_path)
 
         # 初始化 MediaPipe Pose 和 Drawing utilities
         mp_pose = mp.solutions.pose
@@ -58,8 +53,6 @@ if uploaded_file is not None:
         left_hand_landmark_style = mp_drawing.DrawingSpec(color=(0, 196, 235), thickness=2)
         right_hand_landmark_style = mp_drawing.DrawingSpec(color=(255, 142, 0), thickness=2)
 
-        image_paths = []
-
         with mp_holistic.Holistic(min_detection_confidence=0.1, min_tracking_confidence=0.1) as holistic:
             
             progress_text = "Operation in progress. Please wait."
@@ -81,7 +74,6 @@ if uploaded_file is not None:
 
                 image_path = os.path.join(tmp_dir, f'frame_{frame_number}.png')
                 cv2.imwrite(image_path, black_background)
-                image_paths.append(image_path)
                 
                 frame_number += 1
                 progress = frame_number / total_frames
@@ -90,24 +82,45 @@ if uploaded_file is not None:
         cap.release()
 
         if frame_number > 0:
-            # 使用 ImageSequenceClip 創建視頻
-            clip = ImageSequenceClip(image_paths, fps=30)
-            output_video_path = os.path.join(tmp_dir, "processed_video.mp4")
-            clip.write_videofile(output_video_path, codec='libx264')
+            image_paths = natsorted([os.path.join(tmp_dir, f'frame_{i}.png') for i in range(frame_number)])
+            n_frames = len(image_paths)
+            width, height, fps = black_background.shape[1], black_background.shape[0], 30
+            output_memory_file = io.BytesIO()
+            output = av.open(output_memory_file, 'w', format='mp4')
+            stream = output.add_stream('h264', rate=fps)
+            stream.width = width
+            stream.height = height
+            stream.pix_fmt = 'yuv420p'
 
-            # 加載處理後的影片並添加音訊
-            processed_video = VideoFileClip(output_video_path)
-            final_video = processed_video.set_audio(AudioFileClip(audio_path))
-            final_output_path = os.path.join(tmp_dir, "final_video.mp4")
-            final_video.write_videofile(final_output_path, codec="libx264")
+            for image_path in image_paths:
+                frame = cv2.imread(image_path)
+                frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+                frame = av.VideoFrame.from_ndarray(frame, format='rgb24')
+                packet = stream.encode(frame)
+                output.mux(packet)
 
-            with open(final_output_path, 'rb') as f:
-                final_video_bytes = f.read()
+            packet = stream.encode(None)
+            output.mux(packet)
+            output.close()
 
-            st.session_state.processed_video = final_video_bytes
+            # Load the original video and extract its audio
+            original_video = VideoFileClip(tmp_file_path)
+            original_audio = original_video.audio
+
+            # Load the generated video from memory
+            generated_video = VideoFileClip(io.BytesIO(output_memory_file.getvalue()))
+
+            # Combine the generated video with the original audio
+            final_video = generated_video.set_audio(original_audio)
+            
+            # Save the final video to another in-memory file
+            final_output_memory_file = io.BytesIO()
+            final_video.write_videofile(final_output_memory_file, codec='libx264', audio_codec='aac')
+            
+            st.session_state.processed_video1 = final_output_memory_file
             progress_bar.progress(1.0, text="Processing complete!")
 
             with col2:
-                st.video(final_video_bytes, format='video/mp4')
+                st.video(final_output_memory_file, format='video/mp4')
         else:
             st.warning("未能讀取視頻幀")
