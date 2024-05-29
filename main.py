@@ -7,6 +7,7 @@ from natsort import natsorted
 import tempfile
 import io
 import av
+from moviepy.editor import VideoFileClip, AudioFileClip, concatenate_videoclips
 
 st.set_page_config(layout="wide")
 st.title("YYDS影片生成器")
@@ -24,6 +25,12 @@ if uploaded_file is not None:
         with tempfile.NamedTemporaryFile(delete=False, suffix=".mp4") as tmp_file:
             tmp_file.write(uploaded_file.getvalue())
             tmp_file_path = tmp_file.name
+
+        # 提取原始影片音訊
+        original_video = VideoFileClip(tmp_file_path)
+        audio = original_video.audio
+        audio_path = os.path.join(tmp_dir, "original_audio.aac")
+        audio.write_audiofile(audio_path)
 
         # 初始化 MediaPipe Pose 和 Drawing utilities
         mp_pose = mp.solutions.pose
@@ -102,10 +109,23 @@ if uploaded_file is not None:
             output.mux(packet)
             output.close()
 
-            st.session_state.processed_video1 = output_memory_file
+            output_video_path = os.path.join(tmp_dir, "processed_video.mp4")
+            with open(output_video_path, 'wb') as f:
+                f.write(output_memory_file.getvalue())
+
+            # 加載處理後的影片並添加音訊
+            processed_video = VideoFileClip(output_video_path)
+            final_video = processed_video.set_audio(AudioFileClip(audio_path))
+            final_output_path = os.path.join(tmp_dir, "final_video.mp4")
+            final_video.write_videofile(final_output_path, codec="libx264")
+
+            with open(final_output_path, 'rb') as f:
+                final_video_bytes = f.read()
+
+            st.session_state.processed_video = final_video_bytes
             progress_bar.progress(1.0, text="Processing complete!")
 
             with col2:
-                st.video(output_memory_file, format='video/mp4')
+                st.video(final_video_bytes, format='video/mp4')
         else:
             st.warning("未能讀取視頻幀")
