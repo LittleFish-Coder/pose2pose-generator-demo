@@ -10,19 +10,19 @@ import av
 st.set_page_config(layout="wide")
 st.title("YYDS影片生成器")
 # set wide mode
-col1, col2, col3 = st.columns([3, 1, 3],gap='large')
+col1, col2 = st.columns([1,1],gap='large')
 
-with col1:
+
 # 輸入影片
-    uploaded_file = st.file_uploader("選擇一個影片檔", type=['mp4', 'avi', 'mov'])
-    if uploaded_file is not None:
-        with tempfile.NamedTemporaryFile(delete=False) as tmp_file:
-            tmp_file.write(uploaded_file.getvalue())
-            st.video(uploaded_file)
-with col2:
+uploaded_file = st.file_uploader("選擇一個影片檔", type=['mp4', 'avi', 'mov'])
+if uploaded_file is not None:
+    with tempfile.NamedTemporaryFile(delete=False) as tmp_file:
+        tmp_file.write(uploaded_file.getvalue())
+        st.video(uploaded_file)
+with col1:
     st.write('')
     inference_button = st.button('Inference')
-with col3:
+with col2:
     if inference_button:
         st.write('Inference button clicked')
         st.write('Displaying the image')
@@ -58,7 +58,6 @@ with col3:
                 mp_hands = mp.solutions.hands
 
                 with mp_holistic.Holistic(min_detection_confidence=0.8, min_tracking_confidence=0.8) as holistic:
-    
                     while cap.isOpened():
                         ret, frame = cap.read()
                         if not ret:
@@ -86,34 +85,6 @@ with col3:
                         frame_number += 1
                         progress = frame_number / total_frames
                         progress_bar.progress(progress)
-                    
-                # while cap.isOpened():
-                    
-                #     ret, frame = cap.read()
-                #     if not ret:
-                #         break
-
-                #     # Convert the frame to RGB
-                #     frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-
-                #     # Create a black background image
-                #     black_background = np.zeros_like(frame_rgb)
-
-                #     # Process the frame with MediaPipe Pose
-                #     result = pose.process(frame_rgb)
-
-                #     # Draw the pose landmarks on the black background
-                #     if result.pose_landmarks:
-                #         mp_drawing.draw_landmarks(black_background, result.pose_landmarks, mp_pose.POSE_CONNECTIONS, landmark_drawing_spec=mp_drawing_styles.get_default_pose_landmarks_style())
-    
-                #     image_path = os.path.join(tmp_dir, f'frame_{frame_number}.png')
-                #     cv2.imwrite(image_path, black_background)
-
-                #     # if frame_number % 10 == 0:
-                #     #     st.image(black_background, caption=f"Frame {frame_number}", use_column_width=True)
-                #     frame_number += 1
-                #     progress = frame_number / total_frames
-                #     progress_bar.progress(progress)
 
                 cap.release()
                 video_placeholder = st.empty()
@@ -149,10 +120,3 @@ with col3:
                     
                 else:
                     st.warning("未能讀取視頻幀")
-
-
-# generate_button = st.button("generate", key="generate")
-# if generate_button and uploaded_file is not None:
-#     st.session_state.processed_video2 = GAN_model(uploaded_file)
-# if 'processed_video2' in st.session_state:
-#     st.video(st.session_state.processed_video2)
