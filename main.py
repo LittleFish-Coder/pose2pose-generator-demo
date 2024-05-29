@@ -7,7 +7,6 @@ from natsort import natsorted
 import tempfile
 import io
 import av
-from moviepy.editor import VideoFileClip, AudioFileClip, CompositeVideoClip
 
 st.set_page_config(layout="wide")
 st.title("YYDS影片生成器")
@@ -25,6 +24,14 @@ if uploaded_file is not None:
         with tempfile.NamedTemporaryFile(delete=False, suffix=".mp4") as tmp_file:
             tmp_file.write(uploaded_file.getvalue())
             tmp_file_path = tmp_file.name
+
+        # 讀取原始影片的音訊
+        video = av.open(tmp_file_path)
+        audio_stream = next((stream for stream in video.streams if stream.type == 'audio'), None)
+        if audio_stream is not None:
+            audio_frames = audio_stream.decode(video=0)
+        else:
+            audio_frames = None
 
         # 初始化 MediaPipe Pose 和 Drawing utilities
         mp_pose = mp.solutions.pose
@@ -92,6 +99,9 @@ if uploaded_file is not None:
             stream.height = height
             stream.pix_fmt = 'yuv420p'
 
+            if audio_frames is not None:
+                audio_stream = output.add_stream('aac')
+
             for image_path in image_paths:
                 frame = cv2.imread(image_path)
                 frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
@@ -99,28 +109,19 @@ if uploaded_file is not None:
                 packet = stream.encode(frame)
                 output.mux(packet)
 
+                if audio_frames is not None:
+                    for audio_frame in audio_frames:
+                        audio_frames.send(None)
+                        packet = audio_stream.encode(audio_frame)
+                        output.mux(packet)
+
             packet = stream.encode(None)
             output.mux(packet)
             output.close()
-
-            # Load the original video and extract its audio
-            original_video = VideoFileClip(tmp_file_path)
-            original_audio = original_video.audio
-
-            # Load the generated video from memory
-            generated_video = VideoFileClip(io.BytesIO(output_memory_file.getvalue()))
-
-            # Combine the generated video with the original audio
-            final_video = generated_video.set_audio(original_audio)
-            
-            # Save the final video to another in-memory file
-            final_output_memory_file = io.BytesIO()
-            final_video.write_videofile(final_output_memory_file, codec='libx264', audio_codec='aac')
-            
-            st.session_state.processed_video1 = final_output_memory_file
+            st.session_state.processed_video1 = output_memory_file
             progress_bar.progress(1.0, text="Processing complete!")
 
             with col2:
-                st.video(final_output_memory_file, format='video/mp4')
+                st.video(output_memory_file, format='video/mp4')
         else:
             st.warning("未能讀取視頻幀")
