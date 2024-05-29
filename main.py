@@ -6,7 +6,7 @@ import os
 from natsort import natsorted
 import tempfile
 import io
-from moviepy.editor import ImageSequenceClip, AudioFileClip, concatenate_videoclips
+from moviepy.editor import ImageSequenceClip, AudioFileClip
 
 st.set_page_config(layout="wide")
 st.title("YYDS影片生成器")
@@ -92,9 +92,13 @@ if uploaded_file is not None:
             # Set audio to the clip
             clip = clip.set_audio(original_audio)
             
-            # Save the final video to an in-memory file
-            final_output_memory_file = io.BytesIO()
-            clip.write_videofile(final_output_memory_file, codec='libx264', audio_codec='aac', fps=30)
+            # Save the final video to a temporary file
+            final_output_path = os.path.join(tmp_dir, 'final_output.mp4')
+            clip.write_videofile(final_output_path, codec='libx264', audio_codec='aac', fps=30)
+            
+            # Read the final video back into a BytesIO object
+            with open(final_output_path, 'rb') as f:
+                final_output_memory_file = io.BytesIO(f.read())
             
             st.session_state.processed_video1 = final_output_memory_file
             progress_bar.progress(1.0, text="Processing complete!")
