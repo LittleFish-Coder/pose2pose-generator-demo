@@ -6,7 +6,7 @@ import os
 from natsort import natsorted
 import tempfile
 import io
-import av
+from moviepy.editor import ImageSequenceClip, AudioFileClip, concatenate_videoclips
 
 st.set_page_config(layout="wide")
 st.title("YYDS影片生成器")
@@ -24,14 +24,6 @@ if uploaded_file is not None:
         with tempfile.NamedTemporaryFile(delete=False, suffix=".mp4") as tmp_file:
             tmp_file.write(uploaded_file.getvalue())
             tmp_file_path = tmp_file.name
-
-        # 讀取原始影片的音訊
-        video = av.open(tmp_file_path)
-        audio_stream = next((stream for stream in video.streams if stream.type == 'audio'), None)
-        if audio_stream is not None:
-            audio_frames = [frame for packet in audio_stream.demux()]
-        else:
-            audio_frames = None
 
         # 初始化 MediaPipe Pose 和 Drawing utilities
         mp_pose = mp.solutions.pose
@@ -90,37 +82,24 @@ if uploaded_file is not None:
 
         if frame_number > 0:
             image_paths = natsorted([os.path.join(tmp_dir, f'frame_{i}.png') for i in range(frame_number)])
-            n_frames = len(image_paths)
-            width, height, fps = black_background.shape[1], black_background.shape[0], 30
-            output_memory_file = io.BytesIO()
-            output = av.open(output_memory_file, 'w', format='mp4')
-            stream = output.add_stream('h264', rate=fps)
-            stream.width = width
-            stream.height = height
-            stream.pix_fmt = 'yuv420p'
-
-            if audio_frames is not None:
-                audio_stream = output.add_stream(audio_frames[0].codec_name)
-
-            for image_path in image_paths:
-                frame = cv2.imread(image_path)
-                frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-                frame = av.VideoFrame.from_ndarray(frame, format='rgb24')
-                packet = stream.encode(frame)
-                output.mux(packet)
-
-                if audio_frames is not None:
-                    for frame in audio_frames:
-                        output.mux(frame)
-
-            packet = stream.encode(None)
-            output.mux(packet)
-            output.close()
-
-            st.session_state.processed_video1 = output_memory_file
+            
+            # Create video clip from image sequence
+            clip = ImageSequenceClip(image_paths, fps=30)
+            
+            # Load the original video and extract its audio
+            original_audio = AudioFileClip(tmp_file_path)
+            
+            # Set audio to the clip
+            clip = clip.set_audio(original_audio)
+            
+            # Save the final video to an in-memory file
+            final_output_memory_file = io.BytesIO()
+            clip.write_videofile(final_output_memory_file, codec='libx264', audio_codec='aac', fps=30)
+            
+            st.session_state.processed_video1 = final_output_memory_file
             progress_bar.progress(1.0, text="Processing complete!")
 
             with col2:
-                st.video(output_memory_file, format='video/mp4')
+                st.video(final_output_memory_file, format='video/mp4')
         else:
             st.warning("未能讀取視頻幀")
