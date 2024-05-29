@@ -54,7 +54,7 @@ if uploaded_file is not None:
 
         with mp_holistic.Holistic(min_detection_confidence=0.1, min_tracking_confidence=0.1) as holistic:
             progress_container = st.container()
-            progress_text = "處理中，請稍候。"
+            progress_text = "Operation in progress. Please wait."
             progress_bar = progress_container.progress(0, text=progress_text)
 
             while cap.isOpened():
@@ -103,7 +103,7 @@ if uploaded_file is not None:
             output.close()
 
             st.session_state.processed_video1 = output_memory_file
-            progress_bar.progress(1.0, text="處理完成！")
+            progress_bar.progress(1.0, text="Processing complete!")
 
             with col2:
                 st.video(output_memory_file, format='video/mp4')
