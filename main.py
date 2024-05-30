@@ -10,9 +10,13 @@ from moviepy.editor import ImageSequenceClip, AudioFileClip
 import subprocess
 import requests
 import sys
+import torch
 
 st.set_page_config(layout="wide")
 st.title("YYDS Dance Generator")
+
+# check device
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
 @st.cache_data()
@@ -39,7 +43,7 @@ else:
 
 
 # Uploader 放置在標題下方並置中
-uploaded_file = st.file_uploader("選擇一個影片檔", type=["mp4", "avi", "mov"], label_visibility="visible")
+uploaded_file = st.file_uploader("Upload Video", type=["mp4", "avi", "mov"], label_visibility="collapsed")
 progress_container = st.container()
 if uploaded_file is not None:
     col1, col2 = st.columns(2)
@@ -52,11 +56,13 @@ if uploaded_file is not None:
             tmp_file.write(uploaded_file.getvalue())
             tmp_file_path = tmp_file.name
 
-        # 初始化 MediaPipe Pose 和 Drawing utilities
-        mp_pose = mp.solutions.pose
+        # drawing utils
         mp_drawing = mp.solutions.drawing_utils
-        pose = mp_pose.Pose()
         mp_drawing_styles = mp.solutions.drawing_styles
+
+        # partial body pose landmarks
+        mp_pose = mp.solutions.pose
+        pose = mp_pose.Pose(static_image_mode=False, min_detection_confidence=0.1, smooth_landmarks=True)
 
         # 打開影片檔案
         cap = cv2.VideoCapture(tmp_file_path)
@@ -68,18 +74,20 @@ if uploaded_file is not None:
             frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
             black_background = np.zeros_like(frame_rgb)
         else:
-            st.error("讀取影片檔的第一幀失敗。")
+            st.error("Cannot read the video file. Please try again.")
             cap.release()
             exit()
 
         frame_number = 0
+        # full body pose landmarks
         mp_holistic = mp.solutions.holistic
-        mp_hands = mp.solutions.hands
-        # 自定義手部 landmark 風格
-        left_hand_landmark_style = mp_drawing.DrawingSpec(color=(0, 196, 235), thickness=2)
-        right_hand_landmark_style = mp_drawing.DrawingSpec(color=(255, 142, 0), thickness=2)
+        # drawing styles for hands landmarks
+        left_hand_landmark_style = mp_drawing.DrawingSpec(color=(255, 0, 0), thickness=2, circle_radius=2)
+        right_hand_landmark_style = mp_drawing.DrawingSpec(color=(0, 0, 255), thickness=2, circle_radius=2)
 
-        with mp_holistic.Holistic(min_detection_confidence=0.1, min_tracking_confidence=0.1) as holistic:
+        with mp_holistic.Holistic(
+            static_image_mode=False, model_complexity=2, min_detection_confidence=0.1, min_tracking_confidence=0.1, smooth_landmarks=True
+        ) as holistic:
 
             progress_text = "Operation in progress. Please wait."
             progress_bar = progress_container.progress(0, text=progress_text)
@@ -93,19 +101,22 @@ if uploaded_file is not None:
                 frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
                 results = holistic.process(frame)
 
-                # 繪製手部和姿勢 landmarks
-                mp_drawing.draw_landmarks(
-                    black_background, results.right_hand_landmarks, mp_holistic.HAND_CONNECTIONS, landmark_drawing_spec=right_hand_landmark_style
-                )
-                mp_drawing.draw_landmarks(
-                    black_background, results.left_hand_landmarks, mp_holistic.HAND_CONNECTIONS, landmark_drawing_spec=left_hand_landmark_style
-                )
-                mp_drawing.draw_landmarks(
-                    black_background,
-                    results.pose_landmarks,
-                    mp_holistic.POSE_CONNECTIONS,
-                    landmark_drawing_spec=mp_drawing_styles.get_default_pose_landmarks_style(),
-                )
+                if results.pose_landmarks:
+                    # Right hand
+                    mp_drawing.draw_landmarks(
+                        black_background, results.right_hand_landmarks, mp_holistic.HAND_CONNECTIONS, landmark_drawing_spec=right_hand_landmark_style
+                    )
+                    # Left hand
+                    mp_drawing.draw_landmarks(
+                        black_background, results.left_hand_landmarks, mp_holistic.HAND_CONNECTIONS, landmark_drawing_spec=left_hand_landmark_style
+                    )
+                    # Body
+                    mp_drawing.draw_landmarks(
+                        black_background,
+                        results.pose_landmarks,
+                        mp_holistic.POSE_CONNECTIONS,
+                        landmark_drawing_spec=mp_drawing_styles.get_default_pose_landmarks_style(),
+                    )
 
                 image_path = os.path.join(tmp_dir, f"frame_{frame_number}.png")
                 print(image_path)
@@ -145,50 +156,54 @@ if uploaded_file is not None:
 
             print(os.listdir(tmp_dir))
 
-            # create another tmp dir for the generated video
-            with tempfile.TemporaryDirectory() as gen_dir:
-                print(f"Generated video directory: {gen_dir}")
+            with st.spinner("Generating dance video..."):
 
-                # start to test the model
-                subprocess.run(
-                    [
-                        f"{sys.executable}",
-                        "test_model.py",
-                        "--dataroot",
-                        f"{tmp_dir}",
-                        "--results_dir",
-                        f"{gen_dir}",
-                        "--num_test",
-                        f"{total_frames}",
-                        "--gpu_ids",
-                        "-1",
-                    ]
-                )
+                # create another tmp dir for the generated video
+                with tempfile.TemporaryDirectory() as gen_dir:
+                    print(f"Generated video directory: {gen_dir}")
 
-                # write the final video to the output
-                image_gen_paths = natsorted([os.path.join(f"{gen_dir}", f"frame_{i}.png") for i in range(frame_number)])
+                    gpu_ids = "0" if device.type == "cuda" else "-1"
+                    # start to test the model
+                    print(f"Processing with GPU: {gpu_ids}")
+                    subprocess.run(
+                        [
+                            f"{sys.executable}",
+                            "test_model.py",
+                            "--dataroot",
+                            f"{tmp_dir}",
+                            "--results_dir",
+                            f"{gen_dir}",
+                            "--num_test",
+                            f"{total_frames}",
+                            "--gpu_ids",
+                            f"{gpu_ids}",
+                        ]
+                    )
 
-                # Create video clip from image sequence
-                clip = ImageSequenceClip(image_gen_paths, fps=30)
+                    # write the final video to the output
+                    image_gen_paths = natsorted([os.path.join(f"{gen_dir}", f"frame_{i}.png") for i in range(frame_number)])
 
-                # Load the original video and extract its audio
-                original_audio = AudioFileClip(tmp_file_path)
+                    # Create video clip from image sequence
+                    clip = ImageSequenceClip(image_gen_paths, fps=30)
 
-                # Set audio to the clip
-                clip = clip.set_audio(original_audio)
+                    # Load the original video and extract its audio
+                    original_audio = AudioFileClip(tmp_file_path)
 
-                # Save the final video to a temporary file
-                gen_path = os.path.join(gen_dir, "video_gen.mp4")
-                clip.write_videofile(gen_path, codec="libx264", audio_codec="aac", fps=30)
+                    # Set audio to the clip
+                    clip = clip.set_audio(original_audio)
 
-                # Read the final video back into a BytesIO object
-                with open(gen_path, "rb") as f:
-                    gen_memory_file = io.BytesIO(f.read())
+                    # Save the final video to a temporary file
+                    gen_path = os.path.join(gen_dir, "video_gen.mp4")
+                    clip.write_videofile(gen_path, codec="libx264", audio_codec="aac", fps=30)
 
-                st.session_state.processed_video2 = gen_memory_file
-                progress_bar.progress(1.0, text="Processing complete!")
+                    # Read the final video back into a BytesIO object
+                    with open(gen_path, "rb") as f:
+                        gen_memory_file = io.BytesIO(f.read())
 
-                st.video(gen_memory_file, format="video/mp4")
+                    st.session_state.processed_video2 = gen_memory_file
+                    progress_bar.progress(1.0, text="Processing complete!")
+
+                    st.video(gen_memory_file, format="video/mp4")
 
         else:
-            st.warning("未能讀取視頻幀")
+            st.warning("Cannot process the video. Please try again.")
