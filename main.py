@@ -166,7 +166,7 @@ if uploaded_file is not None:
                 clip = clip.set_audio(original_audio)
 
                 # Save the final video to a temporary file
-                gen_path = os.path.join(tmp_dir, "video_gen.mp4")
+                gen_path = os.path.join(gen_dir, "video_gen.mp4")
                 clip.write_videofile(gen_path, codec="libx264", audio_codec="aac", fps=30)
 
                 # Read the final video back into a BytesIO object

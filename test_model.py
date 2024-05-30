@@ -92,3 +92,4 @@ if __name__ == "__main__":
             im = Image.fromarray(im)
             im = im.resize((1280, 720), Image.BICUBIC)
             im.save(save_path)
+            print(f"Saved image: {save_path}")
