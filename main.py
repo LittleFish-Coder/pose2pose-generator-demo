@@ -12,11 +12,12 @@ import requests
 import sys
 import torch
 
-st.set_page_config(layout="wide")
+st.set_page_config(page_title="YYDS Dance Generator", page_icon="🕺", layout="wide")
 st.title("YYDS Dance Generator")
 
 # check device
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+print(f"Device: {device}")
 
 
 @st.cache_data()
