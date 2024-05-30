@@ -86,9 +86,8 @@ if uploaded_file is not None:
         left_hand_landmark_style = mp_drawing.DrawingSpec(color=(255, 0, 0), thickness=2, circle_radius=2)
         right_hand_landmark_style = mp_drawing.DrawingSpec(color=(0, 0, 255), thickness=2, circle_radius=2)
 
-        with mp_holistic.Holistic(
-            static_image_mode=False, model_complexity=2, min_detection_confidence=0.1, min_tracking_confidence=0.1, smooth_landmarks=True
-        ) as holistic:
+        # with mp_holistic.Holistic(static_image_mode=False, model_complexity=1, min_detection_confidence=0.1, min_tracking_confidence=0.1, smooth_landmarks=True) as holistic:
+        with mp_holistic.Holistic() as holistic:
 
             progress_text = "Operation in progress. Please wait."
             progress_bar = progress_container.progress(0, text=progress_text)
