@@ -10,6 +10,9 @@ from moviepy.editor import ImageSequenceClip, AudioFileClip
 import subprocess
 import requests
 
+st.set_page_config(layout="wide")
+st.title("YYDS Dance Generator")
+
 
 @st.cache
 def load_model():
@@ -33,8 +36,6 @@ else:
     st.spinner("Downloading model...")
     load_model()
 
-st.set_page_config(layout="wide")
-st.title("YYDS Dance Generator")
 
 # Uploader 放置在標題下方並置中
 uploaded_file = st.file_uploader("選擇一個影片檔", type=["mp4", "avi", "mov"], label_visibility="visible")
