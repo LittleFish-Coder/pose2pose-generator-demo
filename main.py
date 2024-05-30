@@ -151,7 +151,18 @@ if uploaded_file is not None:
 
                 # start to test the model
                 subprocess.run(
-                    [f"{sys.executable}", "test_model.py", "--dataroot", f"{tmp_dir}", "--results_dir", f"{gen_dir}", "--num_test", f"{total_frames}"]
+                    [
+                        f"{sys.executable}",
+                        "test_model.py",
+                        "--dataroot",
+                        f"{tmp_dir}",
+                        "--results_dir",
+                        f"{gen_dir}",
+                        "--num_test",
+                        f"{total_frames}",
+                        "--gpu_ids",
+                        "-1",
+                    ]
                 )
 
                 # write the final video to the output
