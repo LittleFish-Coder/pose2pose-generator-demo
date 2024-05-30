@@ -8,6 +8,30 @@ import tempfile
 import io
 from moviepy.editor import ImageSequenceClip, AudioFileClip
 import subprocess
+import requests
+
+
+@st.cache
+def load_model():
+    url = "https://ncku365-my.sharepoint.com/:u:/g/personal/nm6121030_ncku_edu_tw/Eede7zJZ2xpCroTGVxtyfDcB1QNLo9stAWBGJcTrdHKByw?e=4azRU3&Download=1"
+    response = requests.get(url)
+
+    # Ensure the request was successful
+    response.raise_for_status()
+
+    # Write the content of the request to a file
+    with open("checkpoints/fish_pix2pix/latest_net_G.pth", "wb") as f:
+        f.write(response.content)
+
+
+# Ensure the directory exists
+os.makedirs("checkpoints/fish_pix2pix", exist_ok=True)
+
+if os.path.exists("checkpoints/fish_pix2pix/latest_net_G.pth"):
+    print("Model already exists.")
+else:
+    st.spinner("Downloading model...")
+    load_model()
 
 st.set_page_config(layout="wide")
 st.title("YYDS Dance Generator")
