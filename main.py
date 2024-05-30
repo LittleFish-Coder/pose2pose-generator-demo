@@ -9,6 +9,7 @@ import io
 from moviepy.editor import ImageSequenceClip, AudioFileClip
 import subprocess
 import requests
+import sys
 
 st.set_page_config(layout="wide")
 st.title("YYDS Dance Generator")
@@ -149,8 +150,8 @@ if uploaded_file is not None:
                 print(f"Generated video directory: {gen_dir}")
 
                 # start to test the model
-                subprocess.call(
-                    ["python", "test_model.py", "--dataroot", f"{tmp_dir}", "--results_dir", f"{gen_dir}", "--num_test", f"{total_frames}"]
+                subprocess.run(
+                    [f"{sys.executable}", "test_model.py", "--dataroot", f"{tmp_dir}", "--results_dir", f"{gen_dir}", "--num_test", f"{total_frames}"]
                 )
 
                 # write the final video to the output
