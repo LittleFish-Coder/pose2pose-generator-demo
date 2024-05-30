@@ -14,7 +14,7 @@ st.set_page_config(layout="wide")
 st.title("YYDS Dance Generator")
 
 
-@st.cache
+@st.cache_data()
 def load_model():
     url = "https://ncku365-my.sharepoint.com/:u:/g/personal/nm6121030_ncku_edu_tw/Eede7zJZ2xpCroTGVxtyfDcB1QNLo9stAWBGJcTrdHKByw?e=4azRU3&Download=1"
     response = requests.get(url)
@@ -143,35 +143,40 @@ if uploaded_file is not None:
                 st.video(final_output_memory_file, format="video/mp4")
 
             print(os.listdir(tmp_dir))
-            # start to test the model
-            subprocess.call(
-                ["python", "test_model.py", "--dataroot", f"{tmp_dir}", "--results_dir", f"./results/{tmp_dir}", "--num_test", f"{total_frames}"]
-            )
 
-            # write the final video to the output
-            image_gen_paths = natsorted([os.path.join(f"results/{tmp_dir}", f"frame_{i}.png") for i in range(frame_number)])
+            # create another tmp dir for the generated video
+            with tempfile.TemporaryDirectory() as gen_dir:
+                print(f"Generated video directory: {gen_dir}")
 
-            # Create video clip from image sequence
-            clip = ImageSequenceClip(image_gen_paths, fps=30)
+                # start to test the model
+                subprocess.call(
+                    ["python", "test_model.py", "--dataroot", f"{tmp_dir}", "--results_dir", f"{gen_dir}", "--num_test", f"{total_frames}"]
+                )
 
-            # Load the original video and extract its audio
-            original_audio = AudioFileClip(tmp_file_path)
+                # write the final video to the output
+                image_gen_paths = natsorted([os.path.join(f"{gen_dir}", f"frame_{i}.png") for i in range(frame_number)])
 
-            # Set audio to the clip
-            clip = clip.set_audio(original_audio)
+                # Create video clip from image sequence
+                clip = ImageSequenceClip(image_gen_paths, fps=30)
 
-            # Save the final video to a temporary file
-            gen_path = os.path.join(tmp_dir, "video_gen.mp4")
-            clip.write_videofile(gen_path, codec="libx264", audio_codec="aac", fps=30)
+                # Load the original video and extract its audio
+                original_audio = AudioFileClip(tmp_file_path)
 
-            # Read the final video back into a BytesIO object
-            with open(gen_path, "rb") as f:
-                gen_memory_file = io.BytesIO(f.read())
+                # Set audio to the clip
+                clip = clip.set_audio(original_audio)
 
-            st.session_state.processed_video2 = gen_memory_file
-            progress_bar.progress(1.0, text="Processing complete!")
+                # Save the final video to a temporary file
+                gen_path = os.path.join(tmp_dir, "video_gen.mp4")
+                clip.write_videofile(gen_path, codec="libx264", audio_codec="aac", fps=30)
 
-            st.video(gen_memory_file, format="video/mp4")
+                # Read the final video back into a BytesIO object
+                with open(gen_path, "rb") as f:
+                    gen_memory_file = io.BytesIO(f.read())
+
+                st.session_state.processed_video2 = gen_memory_file
+                progress_bar.progress(1.0, text="Processing complete!")
+
+                st.video(gen_memory_file, format="video/mp4")
 
         else:
             st.warning("未能讀取視頻幀")
